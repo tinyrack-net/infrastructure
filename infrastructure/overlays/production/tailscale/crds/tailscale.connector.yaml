@@ -1,0 +1,10 @@
+apiVersion: tailscale.com/v1alpha1
+kind: Connector
+metadata:
+  name: tailscale-pod-cidrs
+  namespace: tailscale
+spec:
+  hostname: tailscale-pod-cidrs
+  subnetRouter:
+    advertiseRoutes:
+      - "10.54.0.0/16"

@@ -1,0 +1,41 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: ghost-release
+  namespace: ghost-system
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: ghost-repository
+    namespace: flux-system
+  interval: 5m
+  timeout: 5m
+  releaseName: ghost
+  values:
+    ghostUsername: tinyrack
+    existingSecret: "ghost-initial-admin-secret"
+    ghostEmail: admin@tinyrack.net
+    ghostBlogTitle: 타이니랙
+    ghostHost: "wetrat.click"
+    ghostEnableHttps: true
+    allowEmptyPassword: false
+    ghostSkipInstall: true
+    service:
+      type: ClusterIP
+    persistence:
+      enabled: true
+      size: 4Gi
+      storageClass: "longhorn-rwx"
+      accessModes:
+        - ReadWriteMany
+    mysql:
+      enabled: true
+      auth:
+        database: ghost
+        username: ghost
+        existingSecret: "ghost-database-secret"
+      primary:
+        persistence:
+          enabled: true
+          storageClass: "longhorn-strict-local"
+          size: 4Gi

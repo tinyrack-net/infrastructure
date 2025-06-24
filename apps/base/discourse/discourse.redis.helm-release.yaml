@@ -1,0 +1,20 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: discourse-redis-helm-release
+  namespace: discourse-system
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: redis-repository
+    namespace: flux-system
+  interval: 5m
+  timeout: 5m
+  releaseName: discourse-redis
+  values:
+    auth:
+      enabled: true
+      existingSecret: "discourse-redis-secret"
+      existingSecretPasswordKey: redis-password
+    replica:
+      replicaCount: 0

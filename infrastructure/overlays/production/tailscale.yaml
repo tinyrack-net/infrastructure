@@ -1,0 +1,48 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: tailscale-configs
+  namespace: flux-system
+spec:
+  interval: 15m
+  path: ./infrastructure/overlays/production/tailscale/configs
+  prune: true
+  timeout: 2m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: sealed-secrets-production
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: tailscale-deployment
+  namespace: flux-system
+spec:
+  interval: 15m
+  path: ./infrastructure/base/tailscale
+  prune: true
+  timeout: 2m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: tailscale-configs
+    - name: sealed-secrets-production
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: tailscale-custom-resource-definitions
+  namespace: flux-system
+spec:
+  interval: 15m
+  path: ./infrastructure/overlays/production/tailscale/crds
+  prune: true
+  timeout: 2m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: tailscale-deployment

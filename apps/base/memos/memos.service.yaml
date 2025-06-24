@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: memos-service
+  namespace: memos-system
+spec:
+  selector:
+    app: memos
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5230
+  type: ClusterIP
