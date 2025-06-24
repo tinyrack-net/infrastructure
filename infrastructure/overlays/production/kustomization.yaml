@@ -7,3 +7,4 @@ resources:
   - etcd.yaml
   - longhorn.yaml
   - repositories.yaml
+  - cloudnative-pg.yaml
