@@ -1,20 +1,3 @@
-# longhorn 기본 로딩
-apiVersion: kustomize.toolkit.fluxcd.io/v1
-kind: Kustomization
-metadata:
-  name: longhorn-configs
-  namespace: flux-system
-spec:
-  interval: 15m
-  path: ./infrastructure/overlays/production/longhorn/configs
-  prune: true
-  timeout: 2m
-  sourceRef:
-    kind: GitRepository
-    name: flux-system
-  dependsOn:
-    - name: sealed-secrets-production
----
 # longhorn 배포
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
@@ -27,7 +10,8 @@ spec:
   prune: true
   timeout: 10m
   dependsOn:
-    - name: longhorn-configs
+    - name: s3-configs
+    - name: reflector
     - name: infrastructure-repositories
   sourceRef:
     kind: GitRepository

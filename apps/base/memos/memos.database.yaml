@@ -26,10 +26,10 @@ spec:
       s3Credentials:
         accessKeyId:
           name: tinyrack-s3-secret
-          key: ACCESS_KEY
+          key: AWS_ACCESS_KEY_ID
         secretAccessKey:
           name: tinyrack-s3-secret
-          key: SECRET_KEY
+          key: AWS_SECRET_ACCESS_KEY
       serverName: memos-database
       data:
         compression: bzip2
