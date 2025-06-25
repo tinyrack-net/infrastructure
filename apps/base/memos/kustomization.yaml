@@ -4,6 +4,7 @@ resources:
   - memos.namespace.yaml
   - memos.database.secret.yaml
   - memos.database.helm-release.yaml
+  - memos.database.yaml
   - memos.storage.yaml
   - memos.deployment.yaml
   - memos.service.yaml

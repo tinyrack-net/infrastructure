@@ -9,3 +9,6 @@ spec:
   retain: 10
   parameters:
     volume-backup-policy: if-not-present
+  groups:
+    - backup
+    

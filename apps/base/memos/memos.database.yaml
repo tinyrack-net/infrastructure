@@ -1,0 +1,57 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: memos-database-cluster
+  namespace: memos-system
+  annotations:
+    cnpg.io/skipEmptyWalArchiveCheck: "enabled"
+spec:
+  instances: 1
+  storage:
+    pvcTemplate:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 3Gi
+      storageClassName: longhorn-strict-local
+      volumeMode: Filesystem
+  monitoring:
+    enablePodMonitor: true
+  backup:
+    retentionPolicy: 30d
+    barmanObjectStore: &barmanObjectStore
+      destinationPath: s3://tinyrack/production/services/memos/database
+      endpointURL: https://hel1.your-objectstorage.com
+      s3Credentials:
+        accessKeyId:
+          name: memos-secret
+          key: S3_ACCESS_KEY_ID
+        secretAccessKey:
+          name: memos-secret
+          key: S3_SECRET_KEY
+      serverName: memos-database
+      data:
+        compression: bzip2
+      wal:
+        compression: bzip2
+        maxParallel: 8
+  externalClusters:
+    - name: memos-database
+      barmanObjectStore: *barmanObjectStore
+
+  # 신규 클러스터 프로비저닝 시 주석 처리
+  bootstrap:
+    recovery:
+      source: memos-database
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: memos-backup
+  namespace: memos-system
+spec:
+  schedule: "0 */30 * * * *"
+  backupOwnerReference: self
+  cluster:
+    name: memos-database
