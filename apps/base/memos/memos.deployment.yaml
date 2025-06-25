@@ -37,9 +37,6 @@ spec:
             port: 5230
           initialDelaySeconds: 15
           periodSeconds: 20
-        volumeMounts:
-        - name: memos-storage
-          mountPath: /var/opt/memos
         env:
           - name: MEMOS_DRIVER
             value: "postgres"
@@ -48,7 +45,3 @@ spec:
               secretKeyRef:
                 name: memos-database-secret
                 key: dsn
-      volumes:
-      - name: memos-storage
-        persistentVolumeClaim:
-          claimName: memos-storage

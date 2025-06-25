@@ -21,15 +21,15 @@ spec:
   backup:
     retentionPolicy: 30d
     barmanObjectStore: &barmanObjectStore
-      destinationPath: s3://tinyrack/production/services/memos/database
-      endpointURL: https://hel1.your-objectstorage.com
+      destinationPath: s3://tinyrack/apps/memos/database
+      endpointURL: https://storage.winetree94.com
       s3Credentials:
         accessKeyId:
-          name: memos-secret
-          key: S3_ACCESS_KEY_ID
+          name: tinyrack-s3-secret
+          key: ACCESS_KEY
         secretAccessKey:
-          name: memos-secret
-          key: S3_SECRET_KEY
+          name: tinyrack-s3-secret
+          key: SECRET_KEY
       serverName: memos-database
       data:
         compression: bzip2
