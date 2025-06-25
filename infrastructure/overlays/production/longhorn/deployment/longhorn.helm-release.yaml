@@ -13,5 +13,5 @@ spec:
     longhornUI:
       replicas: 1
     defaultBackupStore:
-      backupTarget: s3://tinyrack/longhorn
+      backupTarget: s3://tinyrack@ap-northeast-2/longhorn
       backupTargetCredentialSecret: tinyrack-s3-secret
