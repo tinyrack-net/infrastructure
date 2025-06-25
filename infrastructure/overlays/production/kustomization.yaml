@@ -9,3 +9,4 @@ resources:
   - repositories.yaml
   - cloudnative-pg.yaml
   - reflector.yaml
+  - s3.yaml
