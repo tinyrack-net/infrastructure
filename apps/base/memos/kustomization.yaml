@@ -2,9 +2,9 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - memos.namespace.yaml
-  # - memos.database.secret.yaml
-  # - memos.database.helm-release.yaml
+  - memos.database.superuser.secret.yaml
+  - memos.database.user.secret.yaml
+  - memos.database.dsn.secret.yaml
   - memos.database.yaml
-  # - memos.storage.yaml
-  # - memos.deployment.yaml
-  # - memos.service.yaml
+  - memos.deployment.yaml
+  - memos.service.yaml

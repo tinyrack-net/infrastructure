@@ -43,5 +43,5 @@ spec:
           - name: MEMOS_DSN
             valueFrom:
               secretKeyRef:
-                name: memos-database-secret
+                name: memos-database-dsn-secret
                 key: dsn
