@@ -5,3 +5,4 @@ resources:
   - ghost.database.secret.yaml
   - ghost.initial-admin.secret.yaml
   - ghost.helm-release.yaml
+  - ghost.database.cron-job.yaml

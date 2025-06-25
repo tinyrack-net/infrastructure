@@ -1,0 +1,49 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ghost-database-backup
+  namespace: ghost-system
+spec:
+  schedule: "0 3 * * *"  # 매일 새벽 3시
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: mysql-backup
+              image: bitnami/aws-cli:latest
+              env:
+                - name: MYSQL_HOST
+                  value: ghost-mysql.ghost-system.svc.cluster.local
+                - name: MYSQL_USER
+                  value: root
+                - name: MYSQL_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: ghost-database-secret
+                      key: mysql-root-password
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: tinyrack-s3-secret
+                      key: AWS_ACCESS_KEY_ID
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: tinyrack-s3-secret
+                      key: AWS_SECRET_ACCESS_KEY
+                - name: AWS_ENDPOINTS
+                  valueFrom:
+                    secretKeyRef:
+                      name: tinyrack-s3-secret
+                      key: AWS_ENDPOINTS
+              command:
+                - sh
+                - -c
+                - |
+                  export AWS_DEFAULT_REGION=us-east-1
+                  TIMESTAMP=$(date +%F-%H%M)
+                  mysqldump -h $MYSQL_HOST -u $MYSQL_USER -p $MYSQL_PASSWORD ghost \
+                    | gzip \
+                    | aws --endpoint-url $AWS_ENDPOINTS s3 cp - s3://tinyrack/apps/ghost/database mysql-backup-$TIMESTAMP.sql.gz
+          restartPolicy: OnFailure
