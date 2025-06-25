@@ -11,7 +11,9 @@ spec:
         spec:
           containers:
             - name: mysql-backup
-              image: bitnami/aws-cli:latest
+              image: docker.io/ubuntu:24.04
+              securityContext:
+                runAsUser: 0
               env:
                 - name: MYSQL_HOST
                   value: ghost-mysql.ghost-system.svc.cluster.local
@@ -41,9 +43,29 @@ spec:
                 - sh
                 - -c
                 - |
-                  export AWS_DEFAULT_REGION=us-east-1
-                  TIMESTAMP=$(date +%F-%H%M)
-                  mysqldump -h $MYSQL_HOST -u $MYSQL_USER -p $MYSQL_PASSWORD ghost \
-                    | gzip \
-                    | aws --endpoint-url $AWS_ENDPOINTS s3 cp - s3://tinyrack/apps/ghost/database mysql-backup-$TIMESTAMP.sql.gz
+                  set -e
+                  apt update && apt install -y mysql-client gzip curl
+                  export TIMESTAMP=$(date +%F-%H%M)
+
+                  echo "Minio CLI Installation"
+                  curl https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs -o /usr/bin/mc
+                  chmod +x /usr/bin/mc
+
+                  echo "Configuring Minio CLI"
+                  mc alias set storage https://$AWS_ENDPOINTS $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
+
+                  echo "Starting MySQL Backup"
+                  SQL_FILE="/tmp/mysql-backup-$TIMESTAMP.sql"
+                  mysqldump -h $MYSQL_HOST -u $MYSQL_USER -p"$MYSQL_PASSWORD" ghost > $SQL_FILE
+                  echo "MySQL Backup completed: $SQL_FILE"
+
+                  echo "Compressing MySQL Backup"
+                  BACKUP_FILE="/tmp/mysql-backup-$TIMESTAMP.sql.gz"
+                  gzip -c $SQL_FILE > $BACKUP_FILE
+                  echo "MySQL Backup compressed: $BACKUP_FILE"
+
+                  echo "Uploading MySQL Backup to Minio"
+                  mc cp $BACKUP_FILE storage/tinyrack/apps/ghost/database/mysql-backup-$TIMESTAMP.sql.gz
+                  echo "MySQL Backup uploaded to Minio: storage/tinyrack/apps/ghost/database/mysql-backup-$TIMESTAMP.sql.gz"
+                  echo "Backup completed successfully"
           restartPolicy: OnFailure
