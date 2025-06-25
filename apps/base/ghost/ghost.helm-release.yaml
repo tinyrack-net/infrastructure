@@ -17,7 +17,7 @@ spec:
     ghostEmail: admin@tinyrack.net
     ghostBlogTitle: 타이니랙
     ghostHost: "wetrat.click"
-    ghostEnableHttps: true
+    # ghostEnableHttps: true
     allowEmptyPassword: false
     # ghostSkipInstall: true
     service:
