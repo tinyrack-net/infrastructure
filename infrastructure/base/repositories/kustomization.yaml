@@ -4,3 +4,4 @@ resources:
   - longhorn.yaml
   - sealed-secrets.yaml
   - tailscale.yaml
+  - reflector.yaml

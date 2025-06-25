@@ -8,3 +8,4 @@ resources:
   - longhorn.yaml
   - repositories.yaml
   - cloudnative-pg.yaml
+  - reflector.yaml
