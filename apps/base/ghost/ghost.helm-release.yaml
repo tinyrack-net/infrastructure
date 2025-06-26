@@ -19,7 +19,7 @@ spec:
     ghostHost: "wetrat.click"
     ghostEnableHttps: true
     allowEmptyPassword: false
-    ghostSkipInstall: true
+    ghostSkipInstall: false
     service:
       type: ClusterIP
     persistence:
