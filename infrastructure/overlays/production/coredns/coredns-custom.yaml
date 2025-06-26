@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-custom
+  namespace: kube-system
+data:
+  # storage.winetree94.click 및 *.storage.winetree94.click 도메인에 대한 규칙
+  winetree94.server: |
+    storage.winetree94.click:53 {
+        errors
+        cache 30
+        forward . <SERVICE_CLUSTER_IP> # 여기에 서비스의 클러스터 IP를 입력합니다.
+    }
+    # 와일드카드 서브도메인 (*.storage.winetree94.click) 처리
+    *.storage.winetree94.click:53 {
+        errors
+        cache 30
+        forward . <SERVICE_CLUSTER_IP> # 여기에 서비스의 클러스터 IP를 입력합니다.
+    }
