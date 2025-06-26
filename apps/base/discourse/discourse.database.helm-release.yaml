@@ -36,7 +36,7 @@ spec:
       persistence:
         enabled: true
         volumeName: "data"
-        storageClass: "longhorn-strict-local"
+        storageClass: "local-path"
         size: 3Gi
     readReplicas:
       name: read

@@ -14,7 +14,7 @@ spec:
       resources:
         requests:
           storage: 3Gi
-      storageClassName: longhorn-strict-local
+      storageClassName: local-path
       volumeMode: Filesystem
   monitoring:
     enablePodMonitor: true

@@ -37,5 +37,5 @@ spec:
       primary:
         persistence:
           enabled: true
-          storageClass: "longhorn-strict-local"
+          storageClass: "local-path"
           size: 4Gi
