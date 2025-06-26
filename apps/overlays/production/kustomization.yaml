@@ -3,5 +3,5 @@ kind: Kustomization
 resources:
   - repositories.yaml
   - ghost.yaml
-  - memos.yaml
+  # - memos.yaml
   # - discourse.yaml
