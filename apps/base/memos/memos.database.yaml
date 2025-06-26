@@ -22,7 +22,7 @@ spec:
     retentionPolicy: 30d
     barmanObjectStore: &barmanObjectStore
       destinationPath: s3://tinyrack/apps/memos/database
-      endpointURL: https://storage.winetree94.com
+      endpointURL: https://storage.winetree94.click
       s3Credentials:
         accessKeyId:
           name: tinyrack-s3-secret
