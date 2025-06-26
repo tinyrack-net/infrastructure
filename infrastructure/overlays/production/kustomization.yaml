@@ -10,3 +10,4 @@ resources:
   - cloudnative-pg.yaml
   - reflector.yaml
   - s3.yaml
+  - coredns.yaml

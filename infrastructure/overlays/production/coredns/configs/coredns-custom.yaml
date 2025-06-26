@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-custom
+  namespace: kube-system
+data:
+  winetree94.click: |
+    winetree94.click:53 {
+      errors
+      cache 30
+      forward . 10.132.244.1
+    }
