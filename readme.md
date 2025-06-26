@@ -55,7 +55,6 @@ sh -s - server \
   --service-cidr=10.54.0.0/16 \
   --disable traefik \
   --disable servicelb \
-  --disable local-storage \
   --tls-san "$(tailscale ip -4)" \
   --tls-san "127.0.0.1"
 ```
@@ -67,7 +66,6 @@ sh -s - server \
 - `--service-cidr=10.54.0.0/16`: 클러스터의 서비스가 할당받는 IP 주소 범위를 변경해요.
 - `--disable traefik`: 기본 인그레스 컨트롤러를 비활성화해요. 이는 클라우드플레어가 대신해요.
 - `--disable servicelb`: 기본 로드 밸런서를 비활성화해요. 이는 클라우드플레어가 대신해요.
-- `--disable local-storage`: 로컬 스토리지를 비활성화해요. 대신 Longhorn 을 사용해요.
 - `--tls-san IP`: Tailscale IP를 통해서만 쿠버네티스 API를 호출할 수 있도록 제한해요.
 
 ## Sealed Secrets 키 등록

@@ -4,5 +4,4 @@ resources:
   - https://raw.githubusercontent.com/longhorn/longhorn/v1.9.0/deploy/prerequisite/longhorn-nfs-installation.yaml
   - longhorn.namespace.yaml
   - longhorn.helm-release.yaml
-  - longhorn.strict-local-storage-class.yaml
   - longhorn.rwx.storage-class.yaml
