@@ -1,8 +1,8 @@
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
-  name: memos-database-cluster
-  namespace: memos-system
+  name: discourse-database-cluster
+  namespace: discourse-system
   annotations:
     cnpg.io/skipEmptyWalArchiveCheck: "enabled"
 spec:
@@ -21,7 +21,7 @@ spec:
   backup:
     retentionPolicy: 30d
     barmanObjectStore: &barmanObjectStore
-      destinationPath: s3://tinyrack/apps/memos/database
+      destinationPath: s3://tinyrack/apps/discourse/database
       endpointURL: https://storage.winetree94.click
       s3Credentials:
         accessKeyId:
@@ -30,39 +30,39 @@ spec:
         secretAccessKey:
           name: tinyrack-s3-secret
           key: AWS_SECRET_ACCESS_KEY
-      serverName: memos-database
+      serverName: discourse-database
       data:
         compression: bzip2
       wal:
         compression: bzip2
         maxParallel: 8
   externalClusters:
-    - name: memos-database
+    - name: discourse-database
       barmanObjectStore: *barmanObjectStore
 
   enableSuperuserAccess: true
   superuserSecret:
-    name: memos-database-superuser-secret
+    name: discourse-database-superuser-secret
 
   # 신규 클러스터 프로비저닝 시 주석 처리
-  bootstrap:
-    recovery:
-      source: memos-database
-
   # bootstrap:
-  #   initdb:
-  #     database: memos
-  #     owner: memos
-  #     secret:
-  #       name: memos-database-user-secret
+  #   recovery:
+  #     source: discourse-database
+
+  bootstrap:
+    initdb:
+      database: discourse
+      owner: discourse
+      secret:
+        name: discourse-database-user-secret
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: ScheduledBackup
 metadata:
-  name: memos-backup
-  namespace: memos-system
+  name: discourse-backup
+  namespace: discourse-system
 spec:
   schedule: "0 */30 * * * *"
   backupOwnerReference: self
   cluster:
-    name: memos-database-cluster
+    name: discourse-database-cluster
