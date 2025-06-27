@@ -13,6 +13,8 @@ spec:
       labels:
         app: discourse
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
         - name: discourse
           image: ghcr.io/tinyrack-net/discourse:latest
