@@ -45,16 +45,16 @@ spec:
     name: memos-database-superuser-secret
 
   # 신규 클러스터 프로비저닝 시 주석 처리
-  # bootstrap:
-  #   recovery:
-  #     source: memos-database
-
   bootstrap:
-    initdb:
-      database: memos
-      owner: memos
-      secret:
-        name: memos-database-user-secret
+    recovery:
+      source: memos-database
+
+  # bootstrap:
+  #   initdb:
+  #     database: memos
+  #     owner: memos
+  #     secret:
+  #       name: memos-database-user-secret
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: ScheduledBackup
