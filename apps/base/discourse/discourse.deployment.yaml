@@ -60,7 +60,7 @@ spec:
             - name: UNICORN_SIDEKIQS
               value: "1"
             - name: DISCOURSE_HOSTNAME
-              value: "forum.wetrat.click"
+              value: "forum.tinyrack.net"
             - name: DISCOURSE_FORCE_HTTPS
               value: "true"
             - name: DISCOURSE_FORCE_TLS

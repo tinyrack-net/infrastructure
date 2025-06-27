@@ -16,7 +16,7 @@ spec:
     existingSecret: "ghost-initial-admin-secret"
     ghostEmail: admin@tinyrack.net
     ghostBlogTitle: 타이니랙
-    ghostHost: "wetrat.click"
+    ghostHost: "tinyrack.net"
     ghostEnableHttps: true
     allowEmptyPassword: false
     ghostSkipInstall: false
