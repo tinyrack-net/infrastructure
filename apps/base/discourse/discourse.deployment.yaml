@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: discourse
+  namespace: discourse-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: discourse
+  template:
+    metadata:
+      labels:
+        app: discourse
+    spec:
+      containers:
+        - name: discourse
+          image: ghcr.io/tinyrack-net/discourse:latest
+          command: ["/sbin/boot"]
+          ports:
+            - containerPort: 80
+            - containerPort: 443
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "4"
+              memory: "4Gi"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          volumeMounts:
+            - mountPath: /shared
+              name: discourse-storage
+              subPath: shared
+            - mountPath: /var/log
+              name: discourse-storage
+              subPath: log
+          env:
+            - name: LC_ALL
+              value: "en_US.UTF-8"
+            - name: LANGUAGE
+              value: "en_US.UTF-8"
+            - name: RAILS_ENV
+              value: "production"
+            - name: UNICORN_WORKERS
+              value: "4"
+            - name: UNICORN_SIDEKIQS
+              value: "1"
+            - name: DISCOURSE_HOSTNAME
+              value: "forum.wetrat.click"
+            - name: DISCOURSE_FORCE_HTTPS
+              value: "true"
+            - name: DISCOURSE_FORCE_TLS
+              value: "true"
+            - name: DISCOURSE_DB_HOST
+              value: "discourse-database-cluster-rw.discourse-system.svc.cluster.local"
+            - name: DISCOURSE_DB_PORT
+              value: "5432"
+            - name: DISCOURSE_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: discourse-database-user-secret
+                  key: username
+            - name: DISCOURSE_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: discourse-database-user-secret
+                  key: password
+            - name: DISCOURSE_REDIS_HOST
+              value: "discourse-redis-master.discourse-system.svc.cluster.local"
+            - name: DISCOURSE_REDIS_PORT
+              value: "6379"
+            - name: DISCOURSE_REDIS_USERNAME
+              value: "default"
+            - name: DISCOURSE_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: discourse-redis-secret
+                  key: redis-password
+      volumes:
+        - name: discourse-storage
+          persistentVolumeClaim:
+            claimName: discourse-storage
