@@ -46,16 +46,16 @@ spec:
     name: discourse-database-superuser-secret
 
   # 신규 클러스터 프로비저닝 시 주석 처리
-  # bootstrap:
-  #   recovery:
-  #     source: discourse-database
-
   bootstrap:
-    initdb:
-      database: discourse
-      owner: discourse
-      secret:
-        name: discourse-database-user-secret
+    recovery:
+      source: discourse-database-15
+
+  # bootstrap:
+  #   initdb:
+  #     database: discourse
+  #     owner: discourse
+  #     secret:
+  #       name: discourse-database-user-secret
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: ScheduledBackup
