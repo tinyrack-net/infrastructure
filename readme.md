@@ -1,24 +1,59 @@
 # 타이니랙 인프라
 
+```mermaid
+flowchart TB
+    internet["인터넷"]
+    cloudflare-tunnel["클라우드 플레어 터널"]
+    cloud-storage["클라우드 백업 스토리지"]
+    internet --> cloudflare-tunnel
+
+    subgraph firewall["방화벽"]
+        subgraph tailscale["태일스케일 네트워크"]
+            direction LR
+
+            subgraph homelab["홈랩"]
+                backup-storage["백업 스토리지"]
+            end
+
+            subgraph cloud["클라우드"]
+                cluster["쿠버네티스"]
+            end
+
+            cluster --> backup-storage
+        end
+    end
+
+    cloudflare-tunnel --> cluster
+    backup-storage --> cloud-storage
+```
+
 `*.tinyrack.net` 서비스의 쿠버네티스 배포용 GitOps 프로젝트에요. 저장소의 변경사항 발생 시 [Flux](https://fluxcd.io/)를 통해 리모트 서버와 동기화 돼요.
 
 현재 제 인프라는 저비용 운영을 위해 단일 머신에서 동작하고 있어요. 그런데도 쿠버네티스를 쓰는 이유는 Git 으로 인프라를 관리하고 재현성과 재해 복구성을 높이기 위함이에요.
 
-이 클러스터는 클라우드플레어 터널과 테일스케일을 활용해서 **제로 트러스트**로 구축되어 있어요. 그래서 인그레스 컨트롤러(Ingress Controller)나 로드 밸런서(Load Balencer)는 사용하지 않아요.
+## 보안 전략
 
-서비스의 모든 영구 데이터(Persistant Data)는 클러스터 내부에 저장돼요. 다시 말해서, 모두가 기피하는 **상태가 있는(Stateful) 쿠버네티스에요.** 모든 영구 볼륨은 [Longhorn](https://longhorn.io/)을 통해 관리되며, 일정 주기마다 외부 오브젝트 스토리지로 백업되도록 구성되어 있어요.
+이 클러스터는 **제로 트러스트** 보안 전략으로 구축되어 있어요. 그래서 공인 IP를 통한 모든 네트워크 접근은 방화벽에서 차단돼요. 외부에서는 오직 [클라우드플레어 터널](https://blog.cloudflare.com/ko-kr/tag/cloudflare-tunnel/)을 통해서만 서비스로 접근할 수 있고 클러스터 관리는 [테일스케일](https://tailscale.com/)을 통해 가상 사설망에서 이루어져요.
 
-본 문서는 현재 클러스터의 구조와 설치 과정과 함께, 인프라 이동이나 재해 복구 상황에서의 복원 과정을 안내하고 있어요.
+인그레스 컨트롤러(Ingress Controller)와 로드 밸런서(Load Balencer) 모두 클라우드플레어가 대신하기 때문에 클러스터에는 포함되어 있지 않아요.
+
+## 데이터 관리
+
+서비스의 모든 영구 데이터(Persistant Data)는 클러스터 내부에 저장돼요. 다시 말해서, 모두가 기피하는 **상태가 있는(Stateful) 쿠버네티스에요.** 데이터는 일정 주기마다 제 홈랩 스토리지 서버에 백업되고, 이는 외부 스토리지 서버로 다시 백업되어 [3-2-1 백업 전략](https://experience.dropbox.com/ko-kr/resources/3-2-1-backup-strategy)을 지키고 있어요.
 
 ---
 
 # 인프라 구성
 
-- etcd: 클러스터 데이터베이스
-- cloudflared: 클라우드플레어 프록시 서버와 연결, 로드 밸런싱
-- tailscale: 쿠버네티스 API를 안전하게 노출
-- Sealed Secrets: 쿠버네티스 시크릿 관리
-- Longhorn: 블록 스토리지 관리/백업/복원
+- [Flannel](https://github.com/flannel-io/flannel): 클러스터 네트워크 관리(CNI)
+- [CoreDNS](https://coredns.io/): 클러스터 DNS 서버 관리
+- [etcd](https://etcd.io/): 클러스터 데이터베이스 관리
+- [Cloudflare](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/): 클라우드플레어 터널 연결, 로드 밸런싱
+- [Tailscale](https://tailscale.com/): 가상 사설망에 쿠버네티스 API를 노출
+- [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets): 쿠버네티스 시크릿 관리
+- [Local Path Provisioner](https://github.com/rancher/local-path-provisioner): 노드에 독립적인 블록 스토리지 관리
+- [Longhorn](https://longhorn.io/): 노드간 공유되는 블록 스토리지 관리
+- [CloudNativePG](https://cloudnative-pg.io/): PostgreSQL 데이터베이스 관리
 
 # 서비스 구성
 
@@ -39,13 +74,15 @@
 
 ## Tailscale 설치
 
+먼저 머신에 [테일스케일을 설치](https://tailscale.com/download)하고 네트워크에 연결해요. 이는 클러스터의 모든 서비스가 테일스케일 네트워크의 스토리지 서버로 접근할 수 있게 만들어주기 위해서에요.
+
 ```bash
-sudo tailscale up --accept-dns=false
+sudo tailscale up --accept-routes
 ```
 
 ## K3S 설치
 
-쿠버네티스는 [K3S](https://k3s.io/)라는 가벼운 배포판을 사용하고 있어요. 설치는 다음의 명령어를 통해 간단히 할 수 있어요.
+다음은 쿠버네티스를 설치해요. 저는 [K3S](https://k3s.io/)라는 가벼운 배포판을 사용하고 있어요.
 
 ```bash
 curl -fL https://get.k3s.io | \
@@ -59,18 +96,18 @@ sh -s - server \
   --tls-san "127.0.0.1"
 ```
 
-설치에는 두가지 옵션을 사용해요.
+설치에 사용한 옵션과 이유는 다음과 같아요.
 
 - `--cluster-init`: 추후 고가용성 확장을 위해 `SQLite` 대신 `etcd` 를 클러스터 데이터베이스로 사용해요.
 - `--cluster-cidr=10.53.0.0/16`: 클러스터의 노드가 할당받는 IP 주소 범위를 변경해요.
 - `--service-cidr=10.54.0.0/16`: 클러스터의 서비스가 할당받는 IP 주소 범위를 변경해요.
 - `--disable traefik`: 기본 인그레스 컨트롤러를 비활성화해요. 이는 클라우드플레어가 대신해요.
 - `--disable servicelb`: 기본 로드 밸런서를 비활성화해요. 이는 클라우드플레어가 대신해요.
-- `--tls-san IP`: Tailscale IP를 통해서만 쿠버네티스 API를 호출할 수 있도록 제한해요.
+- `--tls-san IP`: 노드의 테일스케일 IP로 쿠버네티스 API를 사용할 수 있도록 허용해요.
 
 ## Sealed Secrets 키 등록
 
-저장소 내의 모든 키는 `sealed-secrets`를 통해 암호화되어 전달됩니다. 인프라를 옮긴다면 먼저 사용하던 복호화 키(비밀키)를 복원해야 합니다.
+인프라를 복원하기 전에, 인프라의 암호화된 시크릿을 클러스터가 복호화할 수 있도록 키 등록이 먼저 필요해요.
 
 ```bash
 # sealed secrets 이 설치될 네임스페이스 생성
@@ -79,9 +116,16 @@ sudo kubectl create namespace sealed-secrets
 sudo kubectl -n sealed-secrets apply -f main.key.yaml --force
 ```
 
-## Flux 부트스트랩
+> 저장소에 등록된 키는 공개키이며, 이 과정에서는 비밀키가 필요해요.
 
-Flux 를 통해 모든 인프라를 복원합니다.
+## Flux 에서 앱 복원 해제
+
+다음은 저장소에서 `clusters/production/apps.yaml` 파일의 확장자 뒤에 `.bak` 을 붙여 푸시해요.
+이는 서비스를 제외한 인프라만 먼저 복원하고 이후 롱혼에서 서비스의 데이터 볼륨을 복원하기 위해서에요.
+
+## Flux 연동 및 복원
+
+이제 Flux를 연동하고 모든 인프라를 복원해요.
 
 ```bash
 flux bootstrap github \
@@ -92,9 +136,27 @@ flux bootstrap github \
   --owner=tinyrack-net
 ```
 
-ETCD 백업을 활성화 합니다.
+## 롱혼에서 서비스의 PVC 복원
+
+다음은 서비스들의 PVC 복원을 위해 롱혼의 UI에 접근해요.
+
+```bash
+❯ kubectl port-forward service/longhorn-frontend 8000:80 -n longhorn-system
+```
+
+이후 시스템 복원에서 마지막 백업 데이터를 복원해요.
+
+## 서비스 복원
+
+이제 저장소에서 `clusters/production/apps.yaml.bak` 파일의 확장자 뒤에 `.bak` 을 제거해 푸시해요.
+이제 모든 서비스가 복원되며 기존의 PVC와 연결돼요.
+
+> 데이터베이스는 애플리케이션 레벨에서의 복원을 수행해야 해요.
+> Memos, Discourse 는 CloudnativePG 로 알아서 복원되지만 Ghost 는 MySQL 이라 수동으로 복원이 필요해요. 
 
 ## ETCD 백업 활성화
+
+마지막으로 ETCD 백업을 활성화해요.
 
 ```bash
 sudo -s
@@ -109,25 +171,13 @@ systemctl restart k3s
 
 ---
 
-```bash
-curl -fL https://get.k3s.io | sh -s - server --cluster-init --disable traefik --disable servicelb 
-```
+# 기타
 
-```bash
-sudo cat /var/lib/rancher/k3s/server/node-token
-```
+## 암호화
 
-```bash
-curl -fL https://get.k3s.io | K3S_TOKEN=MYSECRET sh -s - server --disable traefik --disable servicelb --server https://k3s-1.server.lan:6443
-```
+저장소에는 시크릿 생성을 위한 Sealed Secrets 의 공개 키가 포함되어 있어요.
 
-# kubeconfig
-
-```bash
-sudo vi /etc/rancher/k3s/k3s.yaml
-```
-
-# Seal
+필요한 경우 다음의 명령어를 통해 새로운 시크릿을 생성할 수 있어요.
 
 ```bash
 kubectl create secret generic docmost-secret \
@@ -138,44 +188,4 @@ kubectl create secret generic docmost-secret \
         --from-literal=SOME_SECRET_KEY=SOME_SECRET_VALUE -o yaml \
         | kubeseal --cert ./tinyrack-production-key.crt \
         > ./some.secret.yaml
-```
-
-# Backup & Restore
-
-키 백업
-```
-kubectl get secret -n selaled-secrets -l sealedsecrets.bitnami.com/sealed-secrets-key -o yaml > main.key
-```
-
-키 복원
-```
-kubectl apply -f main.key
-kubectl delete pod -n sealed-secrets -l name=sealed-secrets-controller
-```
-
-# require
-
-- kubeseal
-- flux
-
-# 재해 복구
-
-클러스터가 완전히 망가지거나, 인프라 전체를 옮겨야 하는 시나리오에서의 복원 과정입니다.
-
-먼저 위 설치 과정을 참고해 K3S를 설치하고 `sealed-secret` 키를 복원합니다. 그 다음 프로젝트에서 `clusters/production/apps.yaml` 파일의 확장자 뒤에 `.bak` 을 붙여 커밋합니다.
-
-이는 `Flux CD`를 부트스트랩 할 때, 서비스가 설치되며 새로운 `PVC` 볼륨이 할당되지 않도록 하기 위함입니다.
-
-```bash
-
-```
-
-
-# Longhorn
-
-우분투에 설치된 multipathd 와 longhorn 이 충돌할 수 있어서 비활성화
-
-```bash
-systemctl disable multipathd
-systemctl stop multipathd
 ```
