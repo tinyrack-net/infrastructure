@@ -7,6 +7,7 @@ resources:
   - discourse.redis.secret.yaml
   - discourse.storage.yaml
   - discourse.database.yaml
+  - discourse.database-15.yaml
   - discourse.redis.helm-release.yaml
   - discourse.deployment.yaml
   - discourse.service.yaml
