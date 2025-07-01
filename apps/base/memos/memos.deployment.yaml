@@ -4,7 +4,7 @@ metadata:
   name: memos
   namespace: memos-system
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: memos
@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: memos
-        image: neosmemo/memos:stable
+        image: neosmemo/memos:0.24.4
         ports:
         - containerPort: 5230
         resources:
