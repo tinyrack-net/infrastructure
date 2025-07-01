@@ -4,7 +4,7 @@ metadata:
   name: discourse
   namespace: discourse-system
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: discourse
@@ -17,7 +17,7 @@ spec:
         - name: ghcr-secret
       containers:
         - name: discourse
-          image: ghcr.io/tinyrack-net/discourse:1
+          image: ghcr.io/tinyrack-net/discourse:2
           command: ["/sbin/boot"]
           ports:
             - containerPort: 80
