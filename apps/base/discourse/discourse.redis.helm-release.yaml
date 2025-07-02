@@ -16,5 +16,8 @@ spec:
       enabled: true
       existingSecret: "discourse-redis-secret"
       existingSecretPasswordKey: redis-password
+    master:
+      persistance:
+        size: 16Gi
     replica:
       replicaCount: 0
