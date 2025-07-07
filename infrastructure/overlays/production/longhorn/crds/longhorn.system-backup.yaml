@@ -8,7 +8,7 @@ spec:
   cron: '*/30 * * * *'
   retain: 10
   parameters:
-    volume-backup-policy: if-not-present
+    volume-backup-policy: always
   groups:
     - backup
     
