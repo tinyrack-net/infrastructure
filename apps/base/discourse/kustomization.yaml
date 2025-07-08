@@ -4,6 +4,7 @@ resources:
   - discourse.namespace.yaml
   - discourse.database.superuser.secret.yaml
   - discourse.database.user.secret.yaml
+  - discourse.smtp.secret.yaml
   - discourse.redis.secret.yaml
   - discourse.storage.yaml
   - discourse.database-15.yaml

@@ -61,6 +61,23 @@ spec:
               value: "1"
             - name: DISCOURSE_HOSTNAME
               value: "forum.tinyrack.net"
+            - name: DISCOURSE_SMTP_DOMAIN
+              value: "mail.winetree94.com"
+            - name: DISCOURSE_SMTP_ADDRESS
+              value: "mail.winetree94.com"
+            - name: DISCOURSE_SMTP_PORT
+              value: "587"
+            - name: DISCOURSE_SMTP_ENABLE_START_TLS
+              value: "true"
+            - name: DISCOURSE_SMTP_USER_NAME
+              value: "noreply@tinyrack.net"
+            - name: DISCOURSE_SMTP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: discourse-smtp-secret
+                  key: password
+            - name: DISCOURSE_NOTIFICATION_EMAIL
+              value: "noreply@tinyrack.net"
             - name: DISCOURSE_FORCE_HTTPS
               value: "true"
             - name: DISCOURSE_FORCE_TLS
