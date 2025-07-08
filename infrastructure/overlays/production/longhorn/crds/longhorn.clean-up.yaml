@@ -6,6 +6,6 @@ metadata:
 spec:
   task: snapshot-cleanup
   cron: '*/30 * * * *'
-  retain: 10
+  retain: 0
   groups:
     - default
