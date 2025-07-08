@@ -5,10 +5,10 @@ metadata:
   namespace: longhorn-system
 spec:
   task: system-backup
-  cron: '*/30 * * * *'
+  cron: '0 */2 * * *'
   retain: 10
   parameters:
     volume-backup-policy: always
   groups:
-    - backup
+    - default
     

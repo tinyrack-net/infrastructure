@@ -4,8 +4,8 @@ metadata:
   name: cleanup-snapshots-daily
   namespace: longhorn-system
 spec:
-  task: snapshot-cleanup
-  cron: '*/30 * * * *'
-  retain: 0
+  task: snapshot-delete
+  cron: '0 */2 * * *'
+  retain: 10
   groups:
-    - backup
+    - default
