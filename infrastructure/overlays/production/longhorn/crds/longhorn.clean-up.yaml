@@ -1,7 +1,7 @@
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
 metadata:
-  name: cleanup-snapshots-daily
+  name: longhorn-delete-snapshots
   namespace: longhorn-system
 spec:
   task: snapshot-delete
