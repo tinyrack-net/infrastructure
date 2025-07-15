@@ -8,4 +8,4 @@ spec:
   cron: '0 */2 * * *'
   retain: 10
   groups:
-    - backup
+    - default
