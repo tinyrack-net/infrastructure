@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - ghost.namespace.yaml
   - ghost.database.secret.yaml
+  - ghost.smtp.secret.yaml
   - ghost.initial-admin.secret.yaml
   - ghost.helm-release.yaml
   - ghost.database.cron-job.yaml
