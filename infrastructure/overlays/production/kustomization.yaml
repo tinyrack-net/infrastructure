@@ -4,6 +4,7 @@ resources:
   - registry.yaml
   - sealed-secrets.yaml
   - traefik.yaml
+  - metallb.yaml
   - cloudflared.yaml
   - tailscale.yaml
   - etcd.yaml
