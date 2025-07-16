@@ -4,7 +4,7 @@ resources:
   - registry.yaml
   - sealed-secrets.yaml
   - traefik.yaml
-  # - cert-manager.yaml
+  - cert-manager.yaml
   - metallb.yaml
   - cloudflared.yaml
   - tailscale.yaml
