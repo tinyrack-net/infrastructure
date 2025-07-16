@@ -9,3 +9,16 @@ spec:
   retain: 10
   groups:
     - default
+---
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: snapshot-cleanup
+  namespace: longhorn-system
+spec:
+  task: snapshot-cleanup
+  cron: '0 */2 * * *'
+  retain: 0
+  groups:
+    - default
+---
