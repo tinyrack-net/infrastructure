@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - registry.yaml
   - sealed-secrets.yaml
+  - traefik.yaml
   - cloudflared.yaml
   - tailscale.yaml
   - etcd.yaml

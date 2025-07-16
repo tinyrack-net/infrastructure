@@ -1,0 +1,17 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: traefik-release
+  namespace: traefik-system
+spec:
+  chart:
+    spec:
+      chart: traefik
+      version: '36.3.0'
+      sourceRef:
+        kind: HelmRepository
+        name: traefik-repository
+        namespace: flux-system
+  interval: 5m
+  timeout: 5m
+  releaseName: traefik
