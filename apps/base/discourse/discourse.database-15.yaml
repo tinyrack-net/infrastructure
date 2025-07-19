@@ -63,7 +63,7 @@ metadata:
   name: discourse-15-backup
   namespace: discourse-system
 spec:
-  schedule: "0 */30 * * * *"
+  schedule: "0 0 */4 * * *"
   backupOwnerReference: self
   cluster:
     name: discourse-database-15-cluster

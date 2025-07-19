@@ -63,7 +63,7 @@ metadata:
   name: memos-backup
   namespace: memos-system
 spec:
-  schedule: "0 */30 * * * *"
+  schedule: "0 0 */4 * * *"
   backupOwnerReference: self
   cluster:
     name: memos-database-cluster
