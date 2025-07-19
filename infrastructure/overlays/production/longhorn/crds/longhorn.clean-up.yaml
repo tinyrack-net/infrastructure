@@ -6,7 +6,7 @@ metadata:
 spec:
   task: snapshot-delete
   cron: '0 */2 * * *'
-  retain: 10
+  retain: 1
   groups:
     - default
 ---
