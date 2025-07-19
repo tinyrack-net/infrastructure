@@ -17,7 +17,7 @@ spec:
         - name: ghcr-secret
       containers:
         - name: discourse
-          image: ghcr.io/tinyrack-net/discourse:6
+          image: ghcr.io/tinyrack-net/discourse:9
           command: ["/sbin/boot"]
           ports:
             - containerPort: 80
