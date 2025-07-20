@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: letsencrypt-wildcard-cert-tinyrack.net
+  namespace: letsencrypt-certification
+spec:
+  secretName: letsencrypt-wildcard-cert-tinyrack.net
+  issuerRef:
+    name: letsencrypt-cluster-issuer
+    kind: ClusterIssuer
+  dnsNames:
+  - "*.internal.tinyrack.net"

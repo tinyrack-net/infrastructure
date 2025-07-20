@@ -3,3 +3,5 @@ kind: Kustomization
 resources:
   - cloudflare.api-token.secret.yaml
   - cert-manager.cluster-issuer.yaml
+  - letsencrypt-certification.namespace.yaml
+  - letsencrypt-certification.certificate.yaml
