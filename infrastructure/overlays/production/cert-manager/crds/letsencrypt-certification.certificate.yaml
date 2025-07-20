@@ -5,6 +5,12 @@ metadata:
   namespace: letsencrypt-certification
 spec:
   secretName: letsencrypt-wildcard-cert-tinyrack.net
+  secretTemplate:
+    annotations:
+      reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
+      reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces: ""
+      reflector.v1.k8s.emberstack.com/reflection-auto-enabled: "true"
+      reflector.v1.k8s.emberstack.com/reflection-auto-namespaces: ""
   issuerRef:
     name: letsencrypt-cluster-issuer
     kind: ClusterIssuer

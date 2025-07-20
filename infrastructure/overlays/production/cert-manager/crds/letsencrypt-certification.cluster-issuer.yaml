@@ -11,7 +11,7 @@ spec:
     solvers:
     - selector:
         dnsZones:
-          - "internal.tinyrack.net"
+          - "tinyrack.net"
       dns01:
         cloudflare:
           email: winetree94@gmail.com
