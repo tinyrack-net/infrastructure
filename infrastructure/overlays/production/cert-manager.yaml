@@ -15,3 +15,21 @@ spec:
   dependsOn:
     - name: sealed-secrets-production
     - name: reflector
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cert-manager-cluster-custom-resources-production
+  namespace: flux-system
+spec:
+  interval: 15m
+  path: ./infrastructure/overlays/production/cert-manager/crds
+  prune: true
+  wait: true
+  timeout: 2m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: cert-manager-production
+---

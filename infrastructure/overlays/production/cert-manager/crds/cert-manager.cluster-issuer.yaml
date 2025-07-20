@@ -1,0 +1,21 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-cluster-issuer
+  namespace: cert-manager-system
+spec:
+  acme:
+    email: admin@tinyrack.net
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: tinyrack-letsencrypt
+    solvers:
+    - selector:
+        dnsZones:
+          - "tinyrack.net"
+      dns01:
+        cloudflare:
+          email: winetree94@gmail.com
+          apiTokenSecretRef:
+            name: cloudflare-api-token-secret
+            key: api_token
