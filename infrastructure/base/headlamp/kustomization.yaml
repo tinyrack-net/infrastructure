@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - headlamp.namespace.yaml
   - headlamp.helm-release.yaml
+  - headlamp.service-account.yaml
