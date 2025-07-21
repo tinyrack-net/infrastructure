@@ -16,6 +16,9 @@ spec:
   timeout: 5m
   releaseName: headlamp
   values:
+    serviceAccount:
+      create: false
+      name: headlamp-admin
     ingress:
       enabled: true
       hosts:
