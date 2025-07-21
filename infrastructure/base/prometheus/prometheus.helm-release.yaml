@@ -1,0 +1,28 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: prometheus
+  namespace: prometheus-system
+spec:
+  chart:
+    spec:
+      chart: prometheus
+      version: "27.28.0"
+      sourceRef:
+        kind: HelmRepository
+        name: prometheus-repository
+        namespace: flux-system
+  interval: 5m
+  timeout: 5m
+  releaseName: prometheus
+  values:
+    server:
+      ingress:
+        enabled: true
+        hosts:
+          - prometheus.internal.tinyrack.net
+        tls:
+          - secretName: letsencrypt-wildcard-cert-tinyrack.net
+            hosts:
+              - prometheus.internal.tinyrack.net
+        

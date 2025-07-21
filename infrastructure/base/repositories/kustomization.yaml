@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - headlamp.yaml
   - longhorn.yaml
+  - prometheus.yaml
   - traefik.yaml
   - metallb.yaml
   - sealed-secrets.yaml
