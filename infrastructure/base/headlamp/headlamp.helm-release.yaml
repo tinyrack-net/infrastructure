@@ -30,3 +30,15 @@ spec:
         - secretName: letsencrypt-wildcard-cert-tinyrack.net
           hosts:
             - headlamp.internal.tinyrack.net
+    config:
+      watchPlugins: tru
+    pluginsManager:
+      enabled: true
+      plugins:
+        - name: flux
+          source: https://artifacthub.io/packages/headlamp/headlamp-plugins/headlamp_flux
+          version: "0.4.0"
+        - name: cert-manager.io
+          source: https://artifacthub.io/packages/headlamp/headlamp-plugins/headlamp_cert-manager
+          version: "0.1.0"
+
