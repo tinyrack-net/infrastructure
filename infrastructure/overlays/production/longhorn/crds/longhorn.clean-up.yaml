@@ -8,7 +8,7 @@ spec:
   cron: '0 */1 * * *'
   retain: 1
   groups:
-    - default
+    - backup
 ---
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
@@ -20,5 +20,5 @@ spec:
   cron: '0 */1 * * *'
   retain: 0
   groups:
-    - default
+    - backup
 ---

@@ -10,5 +10,5 @@ spec:
   parameters:
     volume-backup-policy: always
   groups:
-    - default
+    - backup
     
