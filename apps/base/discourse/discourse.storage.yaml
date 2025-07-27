@@ -3,8 +3,6 @@ kind: PersistentVolumeClaim
 metadata:
   name: discourse-storage
   namespace: discourse-system
-  labels:
-    recurring-job-group.longhorn.io/backup: "enabled"
 spec:
   accessModes:
     - ReadWriteMany
