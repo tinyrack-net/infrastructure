@@ -7,7 +7,7 @@ spec:
   chart:
     spec:
       chart: longhorn
-      version: "1.9.0"
+      version: "1.9.1"
       sourceRef:
         kind: HelmRepository
         name: longhorn
@@ -28,10 +28,3 @@ spec:
       host: longhorn.internal.tinyrack.net
       tls: true
       tlsSecret: letsencrypt-wildcard-cert-tinyrack.net
-    image:
-      longhorn:
-        manager:
-          tag: v1.9.0-hotfix-1
-    preUpgradeChecker:
-      jobEnabled: true
-      upgradeVersionCheck: false
