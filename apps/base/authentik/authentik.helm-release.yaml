@@ -20,24 +20,49 @@ spec:
       error_reporting:
         enabled: true
       postgresql:
-        host: host
-        name: dbname
+        host: authentik-database-cluster-rw.authentik-system.svc.cluster.local
+        name: authentik
         user: file:///postgres-creds/username
         password: file:///postgres-creds/password
       redis:
-        host: host
-        password: password
+        host: authentik-redis-master.authentik-system.svc.cluster.local
+        password: file:///redis-creds/redis-password
     server:
       ingress:
         ingressClassName: traefik
         enabled: true
         hosts:
-          - authentik.tinyrack.net
+          - authentik.internal.tinyrack.net
+        tls:
+          - secretName: letsencrypt-wildcard-cert-tinyrack.net
+            hosts:
+              - authentik.internal.tinyrack.net
       volumes:
         - name: postgres-creds
           secret:
-            secretName: authentik-postgres-credentials
+            secretName: authentik-database-user-secret
+        - name: redis-creds
+          secret:
+            secretName: authentik-redis-secret
       volumeMounts:
         - name: postgres-creds
           mountPath: /postgres-creds
+          readOnly: true
+        - name: redis-creds
+          mountPath: /redis-creds
+          readOnly: true
+    worker:
+      volumes:
+        - name: postgres-creds
+          secret:
+            secretName: authentik-database-user-secret
+        - name: redis-creds
+          secret:
+            secretName: authentik-redis-secret
+      volumeMounts:
+        - name: postgres-creds
+          mountPath: /postgres-creds
+          readOnly: true
+        - name: redis-creds
+          mountPath: /redis-creds
           readOnly: true

@@ -7,4 +7,4 @@ resources:
   - authentik.redis.secret.yaml
   - authentik.database.yaml
   - authentik.redis.helm-release.yaml
-  # - authentik.helm-release.yaml
+  - authentik.helm-release.yaml
