@@ -1,0 +1,71 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: authentik-database-cluster
+  namespace: authentik-system
+  annotations:
+    cnpg.io/skipEmptyWalArchiveCheck: "enabled"
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17-bookworm
+  storage:
+    pvcTemplate:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 3Gi
+      storageClassName: local-path
+      volumeMode: Filesystem
+  monitoring:
+    enablePodMonitor: true
+  backup:
+    retentionPolicy: 30d
+    barmanObjectStore: &barmanObjectStore
+      destinationPath: s3://tinyrack/apps/authentik/database
+      endpointURL: https://storage.winetree94.click
+      s3Credentials:
+        accessKeyId:
+          name: tinyrack-s3-secret
+          key: AWS_ACCESS_KEY_ID
+        secretAccessKey:
+          name: tinyrack-s3-secret
+          key: AWS_SECRET_ACCESS_KEY
+      serverName: authentik-database
+      data:
+        compression: bzip2
+        encryption: AES256
+      wal:
+        compression: bzip2
+        maxParallel: 8
+        encryption: AES256
+  externalClusters:
+    - name: authentik-database
+      barmanObjectStore: *barmanObjectStore
+
+  enableSuperuserAccess: true
+  superuserSecret:
+    name: authentik-database-superuser-secret
+
+  # 신규 클러스터 프로비저닝 시 주석 처리
+  # bootstrap:
+  #   recovery:
+  #     source: authentik-database-15
+
+  bootstrap:
+    initdb:
+      database: authentik
+      owner: authentik
+      secret:
+        name: authentik-database-user-secret
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: authentik-backup
+  namespace: authentik-system
+spec:
+  schedule: "0 0 */4 * * *"
+  backupOwnerReference: self
+  cluster:
+    name: authentik-database-cluster
