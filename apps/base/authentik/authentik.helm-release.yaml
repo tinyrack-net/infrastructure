@@ -16,7 +16,7 @@ spec:
         namespace: flux-system
   values:
     authentik:
-      secret_key: "PleaseGenerateASecureKey"
+      secret_key: file:///authentik-secret/secret_key
       error_reporting:
         enabled: true
       postgresql:
@@ -37,14 +37,20 @@ spec:
           - secretName: letsencrypt-wildcard-cert-tinyrack.net
             hosts:
               - authentik.internal.tinyrack.net
-      volumes:
+      volumes: &volumes
+        - name: authentik-secret
+          secret:
+            secretName: authentik-secret
         - name: postgres-creds
           secret:
             secretName: authentik-database-user-secret
         - name: redis-creds
           secret:
             secretName: authentik-redis-secret
-      volumeMounts:
+      volumeMounts: &volumeMounts
+        - name: authentik-secret
+          mountPath: /authentik-secret
+          readOnly: true
         - name: postgres-creds
           mountPath: /postgres-creds
           readOnly: true
@@ -52,17 +58,5 @@ spec:
           mountPath: /redis-creds
           readOnly: true
     worker:
-      volumes:
-        - name: postgres-creds
-          secret:
-            secretName: authentik-database-user-secret
-        - name: redis-creds
-          secret:
-            secretName: authentik-redis-secret
-      volumeMounts:
-        - name: postgres-creds
-          mountPath: /postgres-creds
-          readOnly: true
-        - name: redis-creds
-          mountPath: /redis-creds
-          readOnly: true
+      volumes: *volumes
+      volumeMounts: *volumeMounts
