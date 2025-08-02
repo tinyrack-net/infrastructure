@@ -6,9 +6,9 @@ metadata:
 spec:
   task: system-backup
   cron: '0 */4 * * *'
-  retain: 10
+  retain: 1
   concurrency: 2
   parameters:
-    volume-backup-policy: disabled
+    volume-backup-policy: always
   groups:
     - default
