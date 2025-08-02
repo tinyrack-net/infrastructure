@@ -5,8 +5,8 @@ metadata:
   namespace: longhorn-system
 spec:
   task: snapshot-delete
-  cron: '0 */1 * * *'
-  retain: 1
+  cron: '0 */4 * * *'
+  retain: 10
   groups:
     - backup
 ---
@@ -17,8 +17,8 @@ metadata:
   namespace: longhorn-system
 spec:
   task: snapshot-cleanup
-  cron: '0 */1 * * *'
-  retain: 0
+  cron: '0 */4 * * *'
+  retain: 10
   groups:
     - backup
 ---
