@@ -6,19 +6,19 @@ metadata:
 spec:
   task: snapshot-delete
   cron: '0 */4 * * *'
-  retain: 10
+  retain: 1
   groups:
-    - backup
+    - default
 ---
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
 metadata:
-  name: snapshot-cleanup
+  name: longhorn-snapshot-cleanup
   namespace: longhorn-system
 spec:
   task: snapshot-cleanup
   cron: '0 */4 * * *'
-  retain: 10
+  retain: 1
   groups:
-    - backup
+    - default
 ---

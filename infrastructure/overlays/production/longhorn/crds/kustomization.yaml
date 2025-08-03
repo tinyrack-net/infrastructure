@@ -3,4 +3,4 @@ kind: Kustomization
 resources:
   - longhorn.system-backup.yaml
   # - longhorn.volume-backup.yaml
-  # - longhorn.clean-up.yaml
+  - longhorn.clean-up.yaml
