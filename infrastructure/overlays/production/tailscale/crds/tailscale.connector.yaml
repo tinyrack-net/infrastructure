@@ -8,3 +8,4 @@ spec:
   subnetRouter:
     advertiseRoutes:
       - "10.54.0.0/16"
+      - "10.53.0.0/16"
