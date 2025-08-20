@@ -18,13 +18,13 @@ spec:
     ghostBlogTitle: 타이니랙
     ghostHost: "tinyrack.net"
     ghostEnableHttps: true
-    # smtpHost: mail.winetree94.com
-    # smtpPort: 587
-    # smtpUser: "noreply@tinyrack.net"
-    # smtpProtocol: tls
-    # smtpExistingSecret: "ghost-smtp-secret"
+    smtpHost: mail.winetree94.com
+    smtpPort: 587
+    smtpUser: "noreply@tinyrack.net"
+    smtpProtocol: tls
+    smtpExistingSecret: "ghost-smtp-secret"
     allowEmptyPassword: false
-    ghostSkipInstall: false
+    ghostSkipInstall: true
     service:
       type: ClusterIP
     persistence:
@@ -33,6 +33,7 @@ spec:
       storageClass: "longhorn-rwx"
       accessModes:
         - ReadWriteMany
+      existingClaim: "ghost-storage"
     mysql:
       enabled: true
       auth:
