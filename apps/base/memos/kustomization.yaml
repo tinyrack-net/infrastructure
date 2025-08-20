@@ -6,5 +6,5 @@ resources:
   - memos.database.user.secret.yaml
   - memos.database.dsn.secret.yaml
   - memos.database.yaml
-  # - memos.deployment.yaml
+  - memos.deployment.yaml
   - memos.service.yaml
