@@ -14,4 +14,4 @@ spec:
     name: flux-system
   dependsOn:
     - name: infrastructure-repositories
-    # - name: longhorn-custom-resource-definitions
+    - name: longhorn-custom-resource-definitions

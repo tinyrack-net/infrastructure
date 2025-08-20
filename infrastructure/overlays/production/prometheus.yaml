@@ -15,4 +15,4 @@ spec:
   dependsOn:
     - name: cert-manager-cluster-custom-resources-production
     - name: reflector
-    # - name: longhorn-custom-resource-definitions
+    - name: longhorn-custom-resource-definitions

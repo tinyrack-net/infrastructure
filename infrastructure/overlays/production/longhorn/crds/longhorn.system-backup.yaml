@@ -7,7 +7,7 @@ spec:
   task: system-backup
   cron: '0 */4 * * *'
   retain: 1
-  concurrency: 2
+  concurrency: 10
   parameters:
     volume-backup-policy: always
   groups:

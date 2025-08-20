@@ -5,7 +5,7 @@ metadata:
   namespace: longhorn-system
 spec:
   task: snapshot-delete
-  concurrency: 2
+  concurrency: 10
   cron: '0 */8 * * *'
   retain: 1
   groups:
@@ -18,7 +18,7 @@ metadata:
   namespace: longhorn-system
 spec:
   task: snapshot-cleanup
-  concurrency: 2
+  concurrency: 10
   cron: '0 */8 * * *'
   retain: 0
   groups:
