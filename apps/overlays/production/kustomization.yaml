@@ -3,6 +3,6 @@ kind: Kustomization
 resources:
   - repositories.yaml
   # - authentik.yaml
-  # - ghost.yaml
+  - ghost.yaml
   - memos.yaml
   - discourse.yaml
