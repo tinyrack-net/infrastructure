@@ -18,20 +18,20 @@ spec:
     kind: GitRepository
     name: flux-system
 ---
-# longhorn crd 설정
-apiVersion: kustomize.toolkit.fluxcd.io/v1
-kind: Kustomization
-metadata:
-  name: longhorn-custom-resource-definitions
-  namespace: flux-system
-spec:
-  interval: 15m
-  path: ./infrastructure/overlays/production/longhorn/crds
-  prune: true
-  timeout: 2m
-  sourceRef:
-    kind: GitRepository
-    name: flux-system
-  dependsOn:
-    - name: longhorn-deployment
----
+# # longhorn crd 설정
+# apiVersion: kustomize.toolkit.fluxcd.io/v1
+# kind: Kustomization
+# metadata:
+#   name: longhorn-custom-resource-definitions
+#   namespace: flux-system
+# spec:
+#   interval: 15m
+#   path: ./infrastructure/overlays/production/longhorn/crds
+#   prune: true
+#   timeout: 2m
+#   sourceRef:
+#     kind: GitRepository
+#     name: flux-system
+#   dependsOn:
+#     - name: longhorn-deployment
+# ---
