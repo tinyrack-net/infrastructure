@@ -22,8 +22,8 @@ spec:
   backup:
     retentionPolicy: 30d
     barmanObjectStore: &barmanObjectStore
-      destinationPath: s3://tinyrack/apps/authentik/database
-      endpointURL: https://storage.winetree94.click
+      destinationPath: s3://tinyrack-prod/apps/authentik/database
+      endpointURL: https://fsn1.your-objectstorage.com
       s3Credentials:
         accessKeyId:
           name: tinyrack-s3-secret

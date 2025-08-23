@@ -65,7 +65,7 @@ spec:
                   echo "MySQL Backup compressed: $BACKUP_FILE"
 
                   echo "Uploading MySQL Backup to Minio"
-                  mc cp $BACKUP_FILE storage/tinyrack/apps/ghost/database/mysql-backup-$TIMESTAMP.sql.gz
-                  echo "MySQL Backup uploaded to Minio: storage/tinyrack/apps/ghost/database/mysql-backup-$TIMESTAMP.sql.gz"
+                  mc cp $BACKUP_FILE storage/tinyrack-prod/apps/ghost/database/mysql-backup-$TIMESTAMP.sql.gz
+                  echo "MySQL Backup uploaded to Minio: storage/tinyrack-prod/apps/ghost/database/mysql-backup-$TIMESTAMP.sql.gz"
                   echo "Backup completed successfully"
           restartPolicy: OnFailure
