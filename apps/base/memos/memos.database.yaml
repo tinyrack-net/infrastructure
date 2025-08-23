@@ -33,12 +33,10 @@ spec:
           key: AWS_SECRET_ACCESS_KEY
       serverName: memos-database
       data:
-        compression: bzip2
-        encryption: AES256
+        compression: gzip
       wal:
-        compression: bzip2
+        compression: gzip
         maxParallel: 8
-        encryption: AES256
   externalClusters:
     - name: memos-database
       barmanObjectStore: *barmanObjectStore

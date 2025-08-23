@@ -33,12 +33,10 @@ spec:
           key: AWS_SECRET_ACCESS_KEY
       serverName: discourse-database-15
       data:
-        compression: bzip2
-        encryption: AES256
+        compression: gzip
       wal:
-        compression: bzip2
+        compression: gzip
         maxParallel: 8
-        encryption: AES256
   externalClusters:
     - name: discourse-database-15
       barmanObjectStore: *barmanObjectStore
