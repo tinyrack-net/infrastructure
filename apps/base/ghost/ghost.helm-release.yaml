@@ -12,6 +12,7 @@ spec:
   timeout: 5m
   releaseName: ghost
   values:
+    replicaCount: 0
     ghostUsername: tinyrack
     existingSecret: "ghost-initial-admin-secret"
     ghostEmail: admin@tinyrack.net
