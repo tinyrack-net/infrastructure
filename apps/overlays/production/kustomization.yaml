@@ -5,4 +5,4 @@ resources:
   # - authentik.yaml
   - ghost.yaml
   - memos.yaml
-  - discourse.yaml
+  # - discourse.yaml
