@@ -10,3 +10,4 @@ spec:
     requests:
       storage: 30Gi
   storageClassName: longhorn-rwx
+  volumeName: discourse-storage-pv
