@@ -19,5 +19,3 @@ spec:
     master:
       persistance:
         size: 16Gi
-    replica:
-      replicaCount: 0
