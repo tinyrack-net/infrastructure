@@ -12,10 +12,9 @@ spec:
   timeout: 5m
   releaseName: discourse-redis
   values:
+    global:
+      storageClass: "local-path"
     auth:
       enabled: true
       existingSecret: "discourse-redis-secret"
       existingSecretPasswordKey: redis-password
-    master:
-      persistance:
-        size: 16Gi
