@@ -15,3 +15,6 @@ spec:
   interval: 5m
   timeout: 5m
   releaseName: traefik
+  values: 
+    deployment:
+      replicas: 2
