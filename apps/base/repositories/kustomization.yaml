@@ -6,3 +6,4 @@ resources:
   - redis.yaml
   - ghost.yaml
   - discourse.yaml
+  - openwebui.yaml
