@@ -6,6 +6,6 @@ resources:
   - openwebui.database.user.secret.yaml
   - openwebui.storage.yaml
   - openwebui.database.yaml
-  # - discourse.redis.helm-release.yaml
+  - openwebui.helm-release.yaml
   # - discourse.deployment.yaml
   # - discourse.service.yaml
