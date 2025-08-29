@@ -19,8 +19,7 @@ spec:
     websocket:
       enabled: true
       redis:
-        enabled: false
-        url: ""
+        enabled: true
     persistence:
       enabled: true
       storageClass: "longhorn-rwx"
