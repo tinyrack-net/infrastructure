@@ -15,9 +15,15 @@ spec:
         name: openwebui-repository
         namespace: flux-system
   values:
+    persistence:
+      enabled: true
+      storageClass: "longhorn-rwx"
+      accessModes:
+        - ReadWriteMany
+      size: 10Gi
     extraEnvVars:
       - name: DATABASE_URL
         valueFrom:
           secretKeyRef:
-            name: openwebui-database-connection-string
-            key: connection-string
+            name: openwebui-database-uri
+            key: uri

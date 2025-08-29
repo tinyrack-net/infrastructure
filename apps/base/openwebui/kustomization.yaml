@@ -4,8 +4,6 @@ resources:
   - openwebui.namespace.yaml
   - openwebui.database.superuser.secret.yaml
   - openwebui.database.user.secret.yaml
-  - openwebui.storage.yaml
+  - openwebui.database.uri.secret.yaml
   - openwebui.database.yaml
   - openwebui.helm-release.yaml
-  # - discourse.deployment.yaml
-  # - discourse.service.yaml
