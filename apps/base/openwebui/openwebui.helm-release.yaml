@@ -14,3 +14,10 @@ spec:
         kind: HelmRepository
         name: openwebui-repository
         namespace: flux-system
+  values:
+    extraEnvVars:
+      - name: DATABASE_URL
+        valueFrom:
+          secretKeyRef:
+            name: openwebui-database-connection-string
+            key: connection-string
