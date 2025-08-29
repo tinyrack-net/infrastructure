@@ -19,6 +19,7 @@ spec:
       enabled: true
       redis:
         enabled: false
+        url: ""
     persistence:
       enabled: true
       storageClass: "longhorn-rwx"
