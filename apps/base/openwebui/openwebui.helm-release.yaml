@@ -27,3 +27,5 @@ spec:
           secretKeyRef:
             name: openwebui-database-uri
             key: uri
+      - name: BYPASS_MODEL_ACCESS_CONTROL
+        value: "true"
