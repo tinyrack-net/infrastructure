@@ -15,6 +15,10 @@ spec:
         name: openwebui-repository
         namespace: flux-system
   values:
+    websocket:
+      enabled: true
+      redis:
+        enabled: false
     persistence:
       enabled: true
       storageClass: "longhorn-rwx"
