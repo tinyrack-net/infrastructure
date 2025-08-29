@@ -16,10 +16,6 @@ spec:
         namespace: flux-system
   values:
     replicaCount: 2
-    websocket:
-      enabled: true
-      redis:
-        enabled: true
     persistence:
       enabled: true
       storageClass: "longhorn-rwx"
@@ -32,6 +28,10 @@ spec:
           secretKeyRef:
             name: openwebui-database-uri
             key: uri
+      - name: ENABLE_WEBSOCKET_SUPPORT
+        value: "true"
+      - name: WEBSOCKET_MANAGER
+        value: "redis"
       - name: WEBSOCKET_REDIS_URL
         valueFrom:
           secretKeyRef:
