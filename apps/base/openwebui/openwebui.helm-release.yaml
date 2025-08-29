@@ -27,5 +27,10 @@ spec:
           secretKeyRef:
             name: openwebui-database-uri
             key: uri
+      - name: REDIS_URL
+        valueFrom:
+          secretKeyRef:
+            name: openwebui-redis-uri-secret
+            key: uri
       - name: BYPASS_MODEL_ACCESS_CONTROL
         value: "true"
