@@ -44,3 +44,8 @@ spec:
             key: uri
       - name: BYPASS_MODEL_ACCESS_CONTROL
         value: "true"
+      - name: WEBUI_SECRET_KEY
+        valueFrom:
+          secretKeyRef:
+            name: openwebui-secret
+            key: secret-key
