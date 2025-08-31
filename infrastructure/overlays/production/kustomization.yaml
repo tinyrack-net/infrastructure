@@ -3,7 +3,7 @@ kind: Kustomization
 resources:
   - registry.yaml
   - external-secrets.yaml
-  - bitwarden-external-secrets.yaml
+  # - bitwarden-external-secrets.yaml
   - sealed-secrets.yaml
   - traefik.yaml
   - prometheus.yaml
