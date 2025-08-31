@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - headlamp.yaml
   - external-secrets.yaml
+  - bitwarden-external-secrets.yaml
   - longhorn.yaml
   - prometheus.yaml
   - traefik.yaml
