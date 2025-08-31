@@ -1,0 +1,18 @@
+apiVersion: bitwarden.external-secrets.io/v1alpha1
+kind: BitwardenSecret
+metadata:
+  name: my-application-secrets
+spec:
+  namespace: ghost-system
+  secrets:
+    db-username:
+      itemRef:
+        id: "e9e6f7ca-ebe2-41e3-bac1-b34a00d787da"
+        type: field
+        property: db_username
+    
+    db-password:
+      itemRef:
+        id: "e9e6f7ca-ebe2-41e3-bac1-b34a00d787da"
+        type: field
+        property: db_password
