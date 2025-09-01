@@ -6,7 +6,7 @@ resources:
   - mariadb-operator.yaml
   - sealed-secrets.yaml
   - traefik.yaml
-  - prometheus.yaml
+  # - prometheus.yaml
   - cert-manager.yaml
   - metallb.yaml
   - cloudflared.yaml
