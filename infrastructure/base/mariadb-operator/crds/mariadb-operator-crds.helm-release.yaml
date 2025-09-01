@@ -15,4 +15,9 @@ spec:
   interval: 5m
   timeout: 5m
   releaseName: mariadb-operator-crds
+  values:
+    webhook:
+      cert:
+        certManager:
+          enabled: true
   
