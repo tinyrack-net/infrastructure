@@ -4,6 +4,7 @@ resources:
   - headlamp.yaml
   - external-secrets.yaml
   - bitwarden-external-secrets.yaml
+  - mariadb-operator.yaml
   - longhorn.yaml
   - prometheus.yaml
   - traefik.yaml
