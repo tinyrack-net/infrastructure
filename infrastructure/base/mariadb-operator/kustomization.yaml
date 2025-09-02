@@ -4,4 +4,3 @@ resources:
   - mariadb-operator.namespace.yaml
   - crds.yaml
   - operator.yaml
-  - cluster.yaml
