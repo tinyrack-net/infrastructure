@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mariadb-operator-cluster-helm-chart-value-overrides
+  namespace: mariadb-operator-system
+data:
+  values.yaml: |-  
+    # <upstream values go here>
