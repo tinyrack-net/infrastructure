@@ -24,8 +24,6 @@ spec:
         storageClass: longhorn-strict-local
         size: 3Gi
       replicas: 1
-      galera:
-        enabled: true
     databases:
       - name: ghost
         characterSet: utf8
