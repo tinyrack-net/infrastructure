@@ -1,0 +1,47 @@
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: MariaDB
+metadata:
+  name: mariadb-test
+  namespace: ghost-system
+spec:
+  rootPasswordSecretKeyRef:
+    name: ghost-database-secret
+    key: mysql-password
+
+  username: mariadb
+  passwordSecretKeyRef:
+    name: ghost-database-secret
+    key: mysql-password
+    generate: true
+  database: mariadb
+
+  port: 3306
+
+  storage:
+    size: 1Gi
+    storageClassName: longhorn-strict-local
+
+  # service:
+  #   type: ClusterIP
+    # metadata:
+    #   annotations:
+    #     metallb.universe.tf/loadBalancerIPs: 172.18.0.20
+
+  myCnf: |
+    [mariadb]
+    bind-address=*
+    default_storage_engine=InnoDB
+    binlog_format=row
+    innodb_autoinc_lock_mode=2
+    innodb_buffer_pool_size=1024M
+    max_allowed_packet=256M
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 1Gi
+
+  metrics:
+    enabled: true
