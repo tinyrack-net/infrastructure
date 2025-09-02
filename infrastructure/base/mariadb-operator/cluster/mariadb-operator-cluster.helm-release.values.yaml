@@ -4,5 +4,21 @@ metadata:
   name: mariadb-operator-cluster-helm-chart-value-overrides
   namespace: mariadb-operator-system
 data:
-  values.yaml: |-  
-    # <upstream values go here>
+  values.yaml: |-
+    backups:
+      - name: backup
+        schedule: '0 */4 * * *'
+        compression: gzip
+        maxRetention: 720h
+        storage:
+          s3:
+            bucket: tinyrack-prod
+            prefix: mariadb-backups
+            endpoint: fsn1.your-objectstorage.com
+            region: hetzner
+            accessKeyIdSecretKeyRef:
+              name: tinyrack-s3-secret
+              key: AWS_ACCESS_KEY_ID
+            secretAccessKeySecretKeyRef:
+              name: tinyrack-s3-secret
+              key: AWS_SECRET_ACCESS_KEY
