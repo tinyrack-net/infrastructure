@@ -1,0 +1,11 @@
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: longhorn-strict-local
+  annotations:
+    recurring-job-group.longhorn.io/group2: enabled
+provisioner: driver.longhorn.io
+allowVolumeExpansion: true
+parameters:
+  dataLocality: strict-local
+  numberOfReplicas: "1"
