@@ -30,13 +30,13 @@ spec:
           readinessProbe:
             httpGet:
               path: /
-              port: http
+              port: 2368
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /
-              port: http
+              port: 2368
             initialDelaySeconds: 15
             periodSeconds: 20
           volumeMounts:
