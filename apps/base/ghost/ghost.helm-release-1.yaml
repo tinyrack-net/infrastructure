@@ -40,4 +40,5 @@ spec:
       host: ghost-mariadb-cluster.ghost-system.svc.cluster.local
       port: 3306
       database: ghost
+      user: ghost
       existingSecret: "ghost-database-secret"
