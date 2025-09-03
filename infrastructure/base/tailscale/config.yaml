@@ -1,15 +1,16 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: tailscale-deployment
+  name: tailscale-config
   namespace: flux-system
 spec:
   interval: 15m
-  path: ./infrastructure/base/tailscale
+  path: ./infrastructure/base/tailscale/config
   prune: true
   timeout: 2m
+  wait: true
   sourceRef:
     kind: GitRepository
     name: flux-system
   dependsOn:
-    - name: sealed-secrets-production
+    - name: tailscale-install
