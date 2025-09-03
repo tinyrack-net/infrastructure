@@ -17,6 +17,7 @@ spec:
   releaseName: ghost-mariadb-cluster
   values:
     mariadb:
+      image: docker-registry1.mariadb.com/library/mariadb:11.8.2
       rootPasswordSecretKeyRef:
         name: ghost-database-secret
         key: mysql-password
@@ -71,7 +72,7 @@ spec:
         storage:
           s3:
             bucket: tinyrack-prod
-            prefix: mariadb-backups
+            prefix: apps/ghost/
             endpoint: fsn1.your-objectstorage.com
             region: hetzner
             accessKeyIdSecretKeyRef:
