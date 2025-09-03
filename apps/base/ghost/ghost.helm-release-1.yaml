@@ -1,7 +1,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: ghost-release
+  name: ghost-release-2
   namespace: ghost-system
 spec:
   chartRef:
@@ -10,7 +10,7 @@ spec:
     namespace: flux-system
   interval: 5m
   timeout: 5m
-  releaseName: ghost
+  releaseName: ghost-2
   values:
     ghostUsername: tinyrack
     existingSecret: "ghost-initial-admin-secret"
@@ -34,19 +34,10 @@ spec:
       accessModes:
         - ReadWriteMany
       existingClaim: "ghost-storage"
+    mysql:
+      enabled: false
     externalDatabase:
       host: ghost-mariadb-cluster.ghost-system.svc.cluster.local
       port: 3306
       database: ghost
       existingSecret: "ghost-database-secret"
-    # mysql:
-    #   enabled: true
-    #   auth:
-    #     database: ghost
-    #     username: ghost
-    #     existingSecret: "ghost-database-secret"
-    #   primary:
-    #     persistence:
-    #       enabled: true
-    #       storageClass: "local-path"
-    #       size: 4Gi
