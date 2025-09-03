@@ -49,6 +49,23 @@ spec:
               value: "ghost"
             - name: url
               value: "https://tinyrack.net"
+            - name: mail__from
+              value: "noreply@tinyrack.net"
+            - name: mail__transport
+              value: "SMTP"
+            - name: mail__options__host
+              value: "mail.winetree94.com"
+            - name: mail__options__port
+              value: "465"
+            - name: mail__options__secure
+              value: "true"
+            - name: mail__options__auth__user
+              value: "noreply@tinyrack.net"
+            - name: mail__options__auth__pass
+              valueFrom:
+                secretKeyRef:
+                  name: ghost-smtp-secret
+                  key: smtp_password
       volumes:
         - name: ghost-storage
           persistentVolumeClaim:
