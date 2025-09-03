@@ -6,5 +6,5 @@ resources:
   - ghost.smtp.secret.yaml
   - ghost.initial-admin.secret.yaml
   - ghost.helm-release-1.yaml
-  - ghost.database.cron-job.yaml
+  - ghost.deployment.yaml
   - ghost.database.yaml
