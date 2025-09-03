@@ -7,4 +7,4 @@ resources:
   - ghost.initial-admin.secret.yaml
   - ghost.helm-release.yaml
   - ghost.database.cron-job.yaml
-  # - ghost.database.test.yaml
+  - ghost.database.yaml
