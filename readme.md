@@ -35,8 +35,6 @@ flowchart TB
 
 이 클러스터는 **제로 트러스트** 보안 전략으로 구축되어 있어요. 그래서 공인 IP를 통한 모든 네트워크 접근은 방화벽에서 차단돼요. 외부에서는 오직 [클라우드플레어 터널](https://blog.cloudflare.com/ko-kr/tag/cloudflare-tunnel/)을 통해서만 서비스로 접근할 수 있고 클러스터 관리는 [테일스케일](https://tailscale.com/)을 통해 가상 사설망에서 이루어져요.
 
-인그레스 컨트롤러(Ingress Controller)와 로드 밸런서(Load Balencer) 모두 클라우드플레어가 대신하기 때문에 클러스터에는 포함되어 있지 않아요.
-
 ## 데이터 관리
 
 서비스의 모든 영구 데이터(Persistant Data)는 클러스터 내부에 저장돼요. 다시 말해서, 모두가 기피하는 **상태가 있는(Stateful) 쿠버네티스에요.** 데이터는 일정 주기마다 제 홈랩 스토리지 서버에 백업되고, 이는 외부 스토리지 서버로 다시 백업되어 [3-2-1 백업 전략](https://experience.dropbox.com/ko-kr/resources/3-2-1-backup-strategy)을 지키고 있어요.
@@ -54,12 +52,14 @@ flowchart TB
 - [Local Path Provisioner](https://github.com/rancher/local-path-provisioner): 노드에 독립적인 블록 스토리지 관리
 - [Longhorn](https://longhorn.io/): 노드간 공유되는 블록 스토리지 관리
 - [CloudNativePG](https://cloudnative-pg.io/): PostgreSQL 데이터베이스 관리
+- [MariaDB Operator](https://github.com/mariadb-operator/mariadb-operator/): MariaDB 데이터베이스 관리
 
 # 서비스 구성
 
 - [Ghost](https://ghost.org/): 타이니랙 블로그 (https://tinyrack.net)
 - [Discourse](https://www.discourse.org/): 타이니랙 포럼 (https://forum.tinyrack.net)
 - [Memos](https://www.usememos.com/): 타이니랙 작업 노트 (https://notes.tinyrack.net)
+
 
 ---
 
@@ -72,38 +72,27 @@ flowchart TB
 
 # 설치
 
-## Tailscale 설치
-
-먼저 머신에 [테일스케일을 설치](https://tailscale.com/download)하고 네트워크에 연결해요. 이는 클러스터의 모든 서비스가 테일스케일 네트워크의 스토리지 서버로 접근할 수 있게 만들어주기 위해서에요.
-
-```bash
-sudo tailscale up --accept-routes
-```
-
 ## K3S 설치
 
-다음은 쿠버네티스를 설치해요. 저는 [K3S](https://k3s.io/)라는 가벼운 배포판을 사용하고 있어요.
+먼저 쿠버네티스를 설치해요. 저는 [K3S](https://k3s.io/)라는 가벼운 배포판을 사용하고 있어요.
 
 ```bash
 curl -fL https://get.k3s.io | \
 sh -s - server \
   --cluster-init \
-  --cluster-cidr=10.53.0.0/16 \
-  --service-cidr=10.54.0.0/16 \
+  --cluster-cidr=10.55.0.0/16 \
+  --service-cidr=10.56.0.0/16 \
   --disable traefik \
-  --disable servicelb \
-  --tls-san "$(tailscale ip -4)" \
-  --tls-san "127.0.0.1"
+  --disable servicelb
 ```
 
 설치에 사용한 옵션과 이유는 다음과 같아요.
 
 - `--cluster-init`: 추후 고가용성 확장을 위해 `SQLite` 대신 `etcd` 를 클러스터 데이터베이스로 사용해요.
-- `--cluster-cidr=10.53.0.0/16`: 클러스터의 노드가 할당받는 IP 주소 범위를 변경해요.
-- `--service-cidr=10.54.0.0/16`: 클러스터의 서비스가 할당받는 IP 주소 범위를 변경해요.
+- `--cluster-cidr=10.55.0.0/16`: 클러스터의 노드가 할당받는 IP 주소 범위를 변경해요.
+- `--service-cidr=10.56.0.0/16`: 클러스터의 서비스가 할당받는 IP 주소 범위를 변경해요.
 - `--disable traefik`: 기본 인그레스 컨트롤러를 비활성화해요. 이는 클라우드플레어가 대신해요.
-- `--disable servicelb`: 기본 로드 밸런서를 비활성화해요. 이는 클라우드플레어가 대신해요.
-- `--tls-san IP`: 노드의 테일스케일 IP로 쿠버네티스 API를 사용할 수 있도록 허용해요.
+- `--disable servicelb`: 기본 로드 밸런서를 비활성화해요. 이는 클라우드플레어가 대신해요. 내부망 관리로는 `MetalLB`를 대신 사용해요.
 
 ## Sealed Secrets 키 등록
 
