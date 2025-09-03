@@ -20,7 +20,7 @@ spec:
       image: docker-registry1.mariadb.com/library/mariadb:11.8.2
       rootPasswordSecretKeyRef:
         name: ghost-database-secret
-        key: mysql-password
+        key: mysql-root-password
       storage:
         storageClass: longhorn-strict-local
         size: 3Gi
@@ -72,7 +72,7 @@ spec:
         storage:
           s3:
             bucket: tinyrack-prod
-            prefix: apps/ghost/
+            prefix: apps/ghost/mariadb-11
             endpoint: fsn1.your-objectstorage.com
             region: hetzner
             accessKeyIdSecretKeyRef:
