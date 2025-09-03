@@ -76,3 +76,6 @@ spec:
             secretAccessKeySecretKeyRef:
               name: tinyrack-s3-secret
               key: AWS_SECRET_ACCESS_KEY
+            tls:
+              enabled: true
+

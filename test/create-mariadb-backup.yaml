@@ -1,0 +1,23 @@
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: PhysicalBackup
+metadata:
+  name: physicalbackup
+  namespace: ghost-system
+spec:
+  mariaDbRef:
+    name: ghost-mariadb-cluster
+  compression: bzip2
+  storage:
+    s3:
+      bucket: tinyrack-prod
+      prefix: mariadb-backups
+      endpoint: fsn1.your-objectstorage.com
+      region: hetzner
+      accessKeyIdSecretKeyRef:
+        name: tinyrack-s3-secret
+        key: AWS_ACCESS_KEY_ID
+      secretAccessKeySecretKeyRef:
+        name: tinyrack-s3-secret
+        key: AWS_SECRET_ACCESS_KEY
+      tls:
+        enabled: true
