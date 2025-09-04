@@ -1,47 +1,41 @@
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
-  name: ghost-main-ingress-route
+  name: ghost-ingress-route
   namespace: ghost-system
 spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`tinyrack.net`) && PathPrefix(`/`)
+    - match: Host(`tinyrack.net`) && PathPrefix(`/.ghost/activitypub`)
       kind: Rule
       priority: 1
       services:
+        - name: ghost-activity-pub-external
+          port: 443
+          scheme: https
+          passHostHeader: true
+    - match: Host(`tinyrack.net`) && PathPrefix(`/.well-known/webfinger`)
+      kind: Rule
+      priority: 1
+      services:
+        - name: ghost-activity-pub-external
+          port: 443
+          scheme: https
+          passHostHeader: true
+    - match: Host(`tinyrack.net`) && PathPrefix(`/.well-known/nodeinfo`)
+      kind: Rule
+      priority: 1
+      services:
+        - name: ghost-activity-pub-external
+          port: 443
+          scheme: https
+          passHostHeader: true
+    - match: Host(`tinyrack.net`) && PathPrefix(`/`)
+      kind: Rule
+      priority: 0
+      services:
         - name: ghost-service
           port: 80
-  tls:
-    secretName: letsencrypt-wildcard-cert-tinyrack.net
----
-apiVersion: traefik.io/v1alpha1
-kind: IngressRoute
-metadata:
-  name: ghost-activity-pub-ingress-route
-  namespace: ghost-system
-spec:
-  entryPoints:
-    - websecure
-  routes:
-    - match: Host(`tinyrack.net`) && PathPrefix(`/.ghost/activitypub/`)
-      kind: Rule
-      services:
-        - name: ghost-activity-pub-external
-          port: 443
-          scheme: https
-    - match: Host(`tinyrack.net`) && Path(`/.well-known/webfinger`)
-      kind: Rule
-      services:
-        - name: ghost-activity-pub-external
-          port: 443
-          scheme: https
-    - match: Host(`tinyrack.net`) && Path(`/.well-known/nodeinfo`)
-      kind: Rule
-      services:
-        - name: ghost-activity-pub-external
-          port: 443
-          scheme: https
   tls:
     secretName: letsencrypt-wildcard-cert-tinyrack.net
