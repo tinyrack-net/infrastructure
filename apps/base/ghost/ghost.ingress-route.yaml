@@ -9,6 +9,7 @@ spec:
   routes:
     - match: Host(`tinyrack.net`) && PathPrefix(`/`)
       kind: Rule
+      priority: 1
       services:
         - name: ghost-service
           port: 80
