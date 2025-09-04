@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ghost-ingress
+  namespace: ghost-system
+  annotations:
+    ingress.kubernetes.io/force-ssl-redirect: "true"
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: tinyrack.net
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ghost-service
+                port:
+                  name: http
+
+  tls:
+    - hosts:
+        - "tinyrack.net"
+      secretName: letsencrypt-wildcard-cert-tinyrack.net
