@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: memos-ingress
+  namespace: memos-system
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    ingress.kubernetes.io/force-ssl-redirect: "true"
+spec:
+  rules:
+    - host: notes.tinyrack.net
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: guacamole-guacamole
+                port:
+                  name: http
+  tls:
+    - hosts:
+        - "notes.tinyrack.net"
+      secretName: letsencrypt-wildcard-cert-tinyrack.net
