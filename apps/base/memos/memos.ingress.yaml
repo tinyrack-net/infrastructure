@@ -15,9 +15,9 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: guacamole-guacamole
+                name: memos-service
                 port:
-                  name: http
+                  name: https
   tls:
     - hosts:
         - "notes.tinyrack.net"
