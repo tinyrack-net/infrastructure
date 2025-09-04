@@ -17,7 +17,8 @@ spec:
               service:
                 name: memos-service
                 port:
-                  name: https
+                  name: http
+
   tls:
     - hosts:
         - "notes.tinyrack.net"

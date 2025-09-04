@@ -17,7 +17,8 @@ spec:
       - name: memos
         image: neosmemo/memos:0.25.0
         ports:
-        - containerPort: 5230
+        - name: http
+          containerPort: 5230
         resources:
           requests:
             cpu: "250m"
