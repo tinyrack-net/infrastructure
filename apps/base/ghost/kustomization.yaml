@@ -9,5 +9,4 @@ resources:
   - ghost.service.yaml
   - ghost.database.yaml
   - activity-pub.service.yaml
-  - ghost.ingress.yaml
-
+  - ghost.ingress-route.yaml
