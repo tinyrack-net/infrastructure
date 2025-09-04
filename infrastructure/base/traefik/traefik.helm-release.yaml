@@ -16,5 +16,10 @@ spec:
   timeout: 5m
   releaseName: traefik
   values: 
+    providers:
+      kubernetesCRD: 
+        allowExternalNameServices: true
+      kubernetesIngress: 
+        allowExternalNameServices: true
     deployment:
       replicas: 2

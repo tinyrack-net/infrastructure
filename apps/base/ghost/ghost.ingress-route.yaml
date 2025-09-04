@@ -7,7 +7,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`tinyrack.net`) && PathPrefix(`/.ghost/activitypub`)
+    - match: Host(`tinyrack.net`) && PathPrefix(`/.ghost/activitypub/`)
       kind: Rule
       priority: 1
       services:
@@ -15,7 +15,7 @@ spec:
           port: 443
           scheme: https
           passHostHeader: true
-    - match: Host(`tinyrack.net`) && PathPrefix(`/.well-known/webfinger`)
+    - match: Host(`tinyrack.net`) && Path(`/.well-known/webfinger`)
       kind: Rule
       priority: 1
       services:
@@ -23,7 +23,7 @@ spec:
           port: 443
           scheme: https
           passHostHeader: true
-    - match: Host(`tinyrack.net`) && PathPrefix(`/.well-known/nodeinfo`)
+    - match: Host(`tinyrack.net`) && Path(`/.well-known/nodeinfo`)
       kind: Rule
       priority: 1
       services:
