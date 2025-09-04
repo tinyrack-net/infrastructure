@@ -8,3 +8,4 @@ resources:
   - memos.database.yaml
   - memos.deployment.yaml
   - memos.service.yaml
+  - memos.ingress.yaml
