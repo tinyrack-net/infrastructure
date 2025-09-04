@@ -17,7 +17,6 @@ spec:
               service:
                 name: open-webui
                 port:
-                  name: http
                   number: 80
 
   tls:
