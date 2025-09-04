@@ -15,4 +15,7 @@ spec:
     name: letsencrypt-cluster-issuer
     kind: ClusterIssuer
   dnsNames:
-  - "*.internal.tinyrack.net"
+    - "tinyrack.net"
+    - "*.tinyrack.net"
+    - "*.internal.tinyrack.net"
+    - "*.intranet.tinyrack.net"
