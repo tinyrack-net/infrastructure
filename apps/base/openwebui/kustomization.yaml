@@ -11,3 +11,4 @@ resources:
   - openwebui.redis.helm-release.yaml
   - openwebui.database.yaml
   - openwebui.helm-release.yaml
+  - openwebui.ingress.yaml
