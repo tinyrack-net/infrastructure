@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ghost-caddy-config
+  namespace: ghost-system
+data:
+  Caddyfile: |
+    tinyrack.net {
+        # ACTIVITY PUB
+        handle /.ghost/activitypub/* {
+          reverse_proxy https://ap.ghost.org
+        }
+        handle /.well-known/webfinger {
+          reverse_proxy https://ap.ghost.org
+        }
+        handle /.well-known/nodeinfo {
+          reverse_proxy https://ap.ghost.org
+        }
+        handle {
+          reverse_proxy ghost-service.ghost-system.svc.cluster.local:80
+        }
+    }
