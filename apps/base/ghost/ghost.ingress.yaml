@@ -3,8 +3,6 @@ kind: Ingress
 metadata:
   name: ghost-ingress
   namespace: ghost-system
-  annotations:
-    ingress.kubernetes.io/force-ssl-redirect: "true"
 spec:
   ingressClassName: traefik
   rules:
@@ -15,7 +13,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: ghost-service
+                name: caddy-service
                 port:
                   name: http
 

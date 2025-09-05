@@ -9,7 +9,8 @@ resources:
   - ghost.service.yaml
   - ghost.database.yaml
   - activity-pub.service.yaml
-  - ghost.ingress-route.yaml
   - caddy.config-map.yaml
   - caddy.deployment.yaml
   - caddy.service.yaml
+  # - ghost.ingress-route.yaml
+  - ghost.ingress.yaml
