@@ -8,7 +8,7 @@ spec:
     app: caddy
   ports:
     - name: http
-      protocal: TCP
+      protocol: TCP
       port: 80
       targetPort: 80
   type: ClusterIP

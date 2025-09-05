@@ -8,7 +8,7 @@ spec:
     app: ghost
   ports:
     - name: http
-      protocal: TCP
+      protocol: TCP
       port: 80
       targetPort: 2368
     - name: https
