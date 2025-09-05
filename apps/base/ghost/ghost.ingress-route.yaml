@@ -7,6 +7,24 @@ spec:
   entryPoints:
     - websecure
   routes:
+    - match: Host(`tinyrack.net`)
+      kind: Rule
+      services:
+        - name: ghost-service
+          port: 80
+  tls:
+    secretName: letsencrypt-wildcard-cert-tinyrack.net
+
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: ghost-activity-pub-ingress-route
+  namespace: ghost-system
+spec:
+  entryPoints:
+    - websecure
+  routes:
     - match: Host(`tinyrack.net`) && PathPrefix(`/.ghost/activitypub/`)
       kind: Rule
       priority: 1
@@ -31,11 +49,5 @@ spec:
           port: 443
           scheme: https
           passHostHeader: true
-    - match: Host(`tinyrack.net`) && PathPrefix(`/`)
-      kind: Rule
-      priority: 0
-      services:
-        - name: ghost-service
-          port: 80
   tls:
     secretName: letsencrypt-wildcard-cert-tinyrack.net
