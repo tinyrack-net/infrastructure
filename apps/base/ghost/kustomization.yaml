@@ -12,5 +12,5 @@ resources:
   - caddy.config-map.yaml
   - caddy.deployment.yaml
   - caddy.service.yaml
-  - ghost.ingress.yaml
-#  - ghost.ingress-route.yaml
+  - ghost.ingress-route.yaml
+#  - ghost.ingress.yaml
