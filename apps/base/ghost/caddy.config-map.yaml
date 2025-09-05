@@ -5,9 +5,7 @@ metadata:
   namespace: ghost-system
 data:
   Caddyfile: |
-    tinyrack.net {
-        tls off
-
+    http://tinyrack.net {
         # ACTIVITY PUB
         handle /.ghost/activitypub/* {
           reverse_proxy https://ap.ghost.org
