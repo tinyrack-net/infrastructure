@@ -6,7 +6,7 @@ metadata:
 spec:
   task: system-backup
   cron: '0 */4 * * *'
-  retain: 1
+  retain: 10
   concurrency: 10
   parameters:
     volume-backup-policy: always

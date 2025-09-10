@@ -7,7 +7,7 @@ spec:
   task: snapshot-delete
   concurrency: 10
   cron: '0 */8 * * *'
-  retain: 1
+  retain: 10
   groups:
     - default
 ---
