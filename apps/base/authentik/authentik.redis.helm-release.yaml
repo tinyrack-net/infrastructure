@@ -12,12 +12,14 @@ spec:
   timeout: 5m
   releaseName: authentik-redis
   values:
+    global:
+      storageClass: "longhorn-strict-local"
     auth:
       enabled: true
       existingSecret: "authentik-redis-secret"
       existingSecretPasswordKey: redis-password
     master:
-      persistance:
-        size: 16Gi
+      persistence:
+        size: 8Gi
     replica:
       replicaCount: 0

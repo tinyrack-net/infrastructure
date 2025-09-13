@@ -6,3 +6,4 @@ resources:
   - ghost.yaml
   - memos.yaml
   - discourse.yaml
+  - authentik.yaml
