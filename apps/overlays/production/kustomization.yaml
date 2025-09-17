@@ -7,4 +7,4 @@ resources:
   - memos.yaml
   - discourse.yaml
   - authentik.yaml
-  # - metamcp.yaml
+  - metamcp.yaml
