@@ -10,9 +10,5 @@ spec:
     - name: http
       protocal: TCP
       port: 80
-      targetPort: 5230
-    - name: https
-      protocol: TCP
-      port: 443
-      targetPort: 5230
+      targetPort: 12008
   type: ClusterIP

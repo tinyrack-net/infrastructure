@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: memos
-  namespace: memos-system
+  name: metamcp-deployment
+  namespace: metamcp-system
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: memos
+      app: metamcp
   template:
     metadata:
       labels:
-        app: memos
+        app: metamcp
     spec:
       containers:
-      - name: memos
-        image: neosmemo/memos:0.25.0
+      - name: metamcp
+        image: ghcr.io/metatool-ai/metamcp:latest
         ports:
         - name: http
-          containerPort: 5230
+          containerPort: 12008
         resources:
           requests:
             cpu: "250m"
@@ -29,20 +29,44 @@ spec:
         readinessProbe:
           httpGet:
             path: /
-            port: 5230
+            port: 12008
           initialDelaySeconds: 5
           periodSeconds: 10
         livenessProbe:
           httpGet:
             path: /
-            port: 5230
+            port: 12008
           initialDelaySeconds: 15
           periodSeconds: 20
         env:
-          - name: MEMOS_DRIVER
-            value: "postgres"
-          - name: MEMOS_DSN
+          - name: NODE_ENV
+            value: production
+          - name: POSTGRES_HOST
+            value: metamcp-database-cluster-rw.metamcp-system.svc.cluster.local
+          - name: POSTGRES_PORT
+            value: "5432"
+          - name: POSTGRES_USER
             valueFrom:
               secretKeyRef:
-                name: memos-database-dsn-secret
-                key: dsn
+                name: metamcp-database-user-secret
+                key: username
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: metamcp-database-user-secret
+                key: password
+          - name: POSTGRES_DB
+            value: metamcp
+          - name: DATABASE_URL
+            value: postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)
+          - name: TZ
+            value: Asia/Seoul
+          - name: APP_URL
+            value: https://mcp.tinyrack.net
+          - name: NEXT_PUBLIC_APP_URL
+            value: https://mcp.tinyrack.net
+          - name: BETTER_AUTH_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: metamcp-secret
+                key: better-auth-secret

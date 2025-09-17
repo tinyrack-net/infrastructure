@@ -4,8 +4,8 @@ resources:
   - metamcp.namespace.yaml
   - metamcp.database.superuser.secret.yaml
   - metamcp.database.user.secret.yaml
-  # - metamcp.database.dsn.secret.yaml
   - metamcp.database.yaml
-  # - metamcp.deployment.yaml
-  # - metamcp.service.yaml
-  # - metamcp.ingress.yaml
+  - metamcp.secret.yaml
+  - metamcp.deployment.yaml
+  - metamcp.service.yaml
+  - metamcp.ingress.yaml
