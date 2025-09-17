@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: memos
+  namespace: memos-system
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: memos
+  template:
+    metadata:
+      labels:
+        app: memos
+    spec:
+      containers:
+      - name: memos
+        image: neosmemo/memos:0.25.0
+        ports:
+        - name: http
+          containerPort: 5230
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "512Mi"
+          limits:
+            cpu: "1"
+            memory: "1Gi"
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 5230
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 5230
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        env:
+          - name: MEMOS_DRIVER
+            value: "postgres"
+          - name: MEMOS_DSN
+            valueFrom:
+              secretKeyRef:
+                name: memos-database-dsn-secret
+                key: dsn

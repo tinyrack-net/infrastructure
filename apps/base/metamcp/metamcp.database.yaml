@@ -1,0 +1,69 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: metamcp-database-cluster
+  namespace: metamcp-system
+  annotations:
+    cnpg.io/skipEmptyWalArchiveCheck: "enabled"
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17-bookworm
+  storage:
+    pvcTemplate:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 3Gi
+      storageClassName: local-path
+      volumeMode: Filesystem
+  monitoring:
+    enablePodMonitor: true
+  backup:
+    retentionPolicy: 30d
+    barmanObjectStore: &barmanObjectStore
+      destinationPath: s3://tinyrack-prod/apps/metamcp/database
+      endpointURL: https://fsn1.your-objectstorage.com
+      s3Credentials:
+        accessKeyId:
+          name: tinyrack-s3-secret
+          key: AWS_ACCESS_KEY_ID
+        secretAccessKey:
+          name: tinyrack-s3-secret
+          key: AWS_SECRET_ACCESS_KEY
+      serverName: metamcp-database
+      data:
+        compression: gzip
+      wal:
+        compression: gzip
+        maxParallel: 8
+  externalClusters:
+    - name: metamcp-database
+      barmanObjectStore: *barmanObjectStore
+
+  enableSuperuserAccess: true
+  superuserSecret:
+    name: metamcp-database-superuser-secret
+
+  # 신규 클러스터 프로비저닝 시 주석 처리
+  # bootstrap:
+  #   recovery:
+  #     source: metamcp-database
+
+  bootstrap:
+    initdb:
+      database: metamcp
+      owner: metamcp
+      secret:
+        name: metamcp-database-user-secret
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: metamcp-backup
+  namespace: metamcp-system
+spec:
+  schedule: "0 0 */4 * * *"
+  backupOwnerReference: self
+  cluster:
+    name: metamcp-database-cluster

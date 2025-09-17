@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - metamcp.namespace.yaml
+  - metamcp.database.superuser.secret.yaml
+  - metamcp.database.user.secret.yaml
+  # - metamcp.database.dsn.secret.yaml
+  - metamcp.database.yaml
+  # - metamcp.deployment.yaml
+  # - metamcp.service.yaml
+  # - metamcp.ingress.yaml
