@@ -21,7 +21,7 @@ spec:
       enabled: false
     pipelines:
       enabled: false
-    replicaCount: 2
+    replicaCount: 1
     persistence:
       enabled: true
       storageClass: "longhorn-rwx"
@@ -34,20 +34,20 @@ spec:
           secretKeyRef:
             name: openwebui-database-uri
             key: uri
-      - name: ENABLE_WEBSOCKET_SUPPORT
-        value: "true"
-      - name: WEBSOCKET_MANAGER
-        value: "redis"
-      - name: REDIS_URL
-        valueFrom:
-          secretKeyRef:
-            name: openwebui-redis-uri-secret
-            key: uri
-      - name: WEBSOCKET_REDIS_URL
-        valueFrom:
-          secretKeyRef:
-            name: openwebui-redis-uri-secret
-            key: uri
+      # - name: ENABLE_WEBSOCKET_SUPPORT
+      #   value: "true"
+      # - name: WEBSOCKET_MANAGER
+      #   value: "redis"
+      # - name: REDIS_URL
+      #   valueFrom:
+      #     secretKeyRef:
+      #       name: openwebui-redis-uri-secret
+      #       key: uri
+      # - name: WEBSOCKET_REDIS_URL
+      #   valueFrom:
+      #     secretKeyRef:
+      #       name: openwebui-redis-uri-secret
+      #       key: uri
       - name: BYPASS_MODEL_ACCESS_CONTROL
         value: "false"
       - name: WEBUI_SECRET_KEY
