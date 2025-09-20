@@ -50,6 +50,8 @@ spec:
             key: uri
       - name: BYPASS_MODEL_ACCESS_CONTROL
         value: "false"
+      - name: ENABLE_FORWARD_USER_INFO_HEADERS
+        value: "true"
       - name: WEBUI_SECRET_KEY
         valueFrom:
           secretKeyRef:
