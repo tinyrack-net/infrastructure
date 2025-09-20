@@ -21,3 +21,4 @@ data:
         - model_name: gemini/gemini-2.5-flash
           litellm_params:
             model: gemini/gemini-2.5-flash
+            merge_reasoning_content_in_choices: true
