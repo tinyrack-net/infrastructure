@@ -11,6 +11,11 @@ data:
         database_connection_pool_limit: 10
         disable_error_logs: True
         allow_requests_on_db_unavailable: False
+        user_header_mappings:
+          - header_name: X-OpenWebUI-User-Id
+            litellm_user_role: internal_user
+          - header_name: X-OpenWebUI-User-Email
+            litellm_user_role: customer
 
       # model_list: 
       #   - model_name: gpt-4o
