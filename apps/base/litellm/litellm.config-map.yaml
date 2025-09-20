@@ -5,8 +5,6 @@ metadata:
   namespace: litellm-system
 data:
   config.yaml: |
-      litellm_settings:
-        merge_reasoning_content_in_choices: true
       general_settings: 
         master_key: os.environ/LITELLM_MASTER_KEY
         proxy_batch_write_at: 60
@@ -19,9 +17,7 @@ data:
           - header_name: X-OpenWebUI-User-Email
             litellm_user_role: customer
 
-      # model_list: 
-      #   - model_name: gpt-4o
-      #     litellm_params:
-      #       model: azure/gpt-4o-ca
-      #       api_base: https://my-endpoint-canada-berri992.openai.azure.com/
-      #       api_key: os.environ/CA_AZURE_OPENAI_API_KEY
+      model_list: 
+        - model_name: gemini/gemini-2.5-flash
+          litellm_params:
+            model: gemini/gemini-2.5-flash
