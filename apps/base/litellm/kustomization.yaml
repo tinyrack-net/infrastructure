@@ -8,3 +8,6 @@ resources:
   - litellm.secret.yaml
   - litellm.config-map.yaml
   - litellm.deployment.yaml
+  - litellm.service.yaml
+  - litellm.ingress.yaml
+

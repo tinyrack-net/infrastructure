@@ -17,6 +17,10 @@ spec:
         - name: litellm-container
           image: ghcr.io/berriai/litellm:main-stable
           imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 4000
+              protocol: TCP
           resources:
             requests:
               cpu: "500m"
