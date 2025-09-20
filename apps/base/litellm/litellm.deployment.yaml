@@ -47,6 +47,8 @@ spec:
               value: litellm
             - name: DATABASE_URL
               value: postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)
+            - name: STORE_MODEL_IN_DB
+              value: "True"
           envFrom:
             - secretRef:
                 name: litellm-secret
