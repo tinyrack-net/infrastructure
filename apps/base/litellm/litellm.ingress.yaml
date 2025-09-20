@@ -6,7 +6,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-    - host: litellm.tinyrack.net
+    - host: llm.tinyrack.net
       http:
         paths:
           - path: /
@@ -19,5 +19,5 @@ spec:
 
   tls:
     - hosts:
-        - "litellm.tinyrack.net"
+        - "llm.tinyrack.net"
       secretName: letsencrypt-wildcard-cert-tinyrack.net
