@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: litellm-config
+  namespace: litellm-system
+data:
+  config.yaml: |
+      general_settings: 
+        master_key: os.environ/LITELLM_MASTER_KEY
+        proxy_batch_write_at: 60
+        database_connection_pool_limit: 10
+        disable_error_logs: True
+        allow_requests_on_db_unavailable: False
+
+      # model_list: 
+      #   - model_name: gpt-4o
+      #     litellm_params:
+      #       model: azure/gpt-4o-ca
+      #       api_base: https://my-endpoint-canada-berri992.openai.azure.com/
+      #       api_key: os.environ/CA_AZURE_OPENAI_API_KEY

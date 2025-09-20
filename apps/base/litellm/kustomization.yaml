@@ -5,3 +5,6 @@ resources:
   - litellm.database.superuser.secret.yaml
   - litellm.database.user.secret.yaml
   - litellm.database.yaml
+  - litellm.secret.yaml
+  - litellm.config-map.yaml
+  - litellm.deployment.yaml
