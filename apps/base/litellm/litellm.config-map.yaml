@@ -16,13 +16,3 @@ data:
             litellm_user_role: internal_user
           - header_name: X-OpenWebUI-User-Email
             litellm_user_role: customer
-
-      model_list: 
-        - model_name: gemini/gemini-2.5-flash
-          litellm_params:
-            model: gemini/gemini-2.5-flash
-            merge_reasoning_content_in_choices: true
-        - model_name: openrouter/x-ai/grok-4-fast:free
-          litellm_params:
-            model: openrouter/x-ai/grok-4-fast:free
-            merge_reasoning_content_in_choices: true
