@@ -5,6 +5,8 @@ metadata:
   namespace: litellm-system
 data:
   config.yaml: |
+      litellm_settings:
+        merge_reasoning_content_in_choices: true
       general_settings: 
         master_key: os.environ/LITELLM_MASTER_KEY
         proxy_batch_write_at: 60
