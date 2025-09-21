@@ -18,13 +18,13 @@ data:
           - header_name: X-OpenWebUI-User-Email
             litellm_user_role: customer
 
-      model_list: 
-        - model_name: tinyrack-ai/leesol-google-sheet
-          litellm_params:
-            model: openrouter/google/gemini-2.5-flash
-            merge_reasoning_content_in_choices: true
-        - model_name: tinyrack-ai/search
-          litellm_params:
-            model: openrouter/google/gemini-2.5-flash
-            merge_reasoning_content_in_choices: true
+       # model_list: 
+       #   - model_name: tinyrack-ai/leesol-google-sheet
+       #     litellm_params:
+       #       model: openrouter/google/gemini-2.5-flash
+       #       merge_reasoning_content_in_choices: true
+       #   - model_name: tinyrack-ai/search
+       #     litellm_params:
+       #       model: openrouter/google/gemini-2.5-flash
+       #       merge_reasoning_content_in_choices: true
 
