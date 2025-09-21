@@ -21,10 +21,10 @@ data:
       model_list: 
         - model_name: tinyrack-ai/leesol-google-sheet
           litellm_params:
-            model: openrouter/gemini/gemini-2.5-flash
+            model: openrouter/google/gemini-2.5-flash
             merge_reasoning_content_in_choices: true
         - model_name: tinyrack-ai/search
           litellm_params:
-            model: openrouter/gemini/gemini-2.5-flash
+            model: openrouter/google/gemini-2.5-flash
             merge_reasoning_content_in_choices: true
 
