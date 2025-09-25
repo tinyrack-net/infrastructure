@@ -5,7 +5,7 @@ resources:
   - ghost.yaml
   - memos.yaml
   - discourse.yaml
-  - authentik.yaml
-  - metamcp.yaml
-  - litellm.yaml
+  # - authentik.yaml
+  # - metamcp.yaml
+  # - litellm.yaml
   - openwebui.yaml

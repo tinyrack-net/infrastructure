@@ -46,16 +46,16 @@ spec:
     name: metamcp-database-superuser-secret
 
   # 신규 클러스터 프로비저닝 시 주석 처리
-  # bootstrap:
-  #   recovery:
-  #     source: metamcp-database
-
   bootstrap:
-    initdb:
-      database: metamcp
-      owner: metamcp
-      secret:
-        name: metamcp-database-user-secret
+    recovery:
+      source: metamcp-database
+
+  # bootstrap:
+  #   initdb:
+  #     database: metamcp
+  #     owner: metamcp
+  #     secret:
+  #       name: metamcp-database-user-secret
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: ScheduledBackup

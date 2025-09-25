@@ -46,16 +46,16 @@ spec:
     name: authentik-database-superuser-secret
 
   # 신규 클러스터 프로비저닝 시 주석 처리
-  # bootstrap:
-  #   recovery:
-  #     source: authentik-database-15
-
   bootstrap:
-    initdb:
-      database: authentik
-      owner: authentik
-      secret:
-        name: authentik-database-user-secret
+    recovery:
+      source: authentik-database-15
+
+  # bootstrap:
+  #   initdb:
+  #     database: authentik
+  #     owner: authentik
+  #     secret:
+  #       name: authentik-database-user-secret
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: ScheduledBackup
