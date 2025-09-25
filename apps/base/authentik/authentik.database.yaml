@@ -48,7 +48,7 @@ spec:
   # 신규 클러스터 프로비저닝 시 주석 처리
   bootstrap:
     recovery:
-      source: authentik-database-15
+      source: authentik-database
 
   # bootstrap:
   #   initdb:
