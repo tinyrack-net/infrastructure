@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: metamcp
-        image: ghcr.io/metatool-ai/metamcp:latest
+        image: ghcr.io/metatool-ai/metamcp:2.4.15
         ports:
         - name: http
           containerPort: 12008
