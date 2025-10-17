@@ -9,15 +9,12 @@ spec:
   chart:
     spec:
       chart: open-webui
-      version: "8.10.0"
+      version: "8.11.0"
       sourceRef:
         kind: HelmRepository
         name: openwebui-repository
         namespace: flux-system
   values:
-    image:
-      repository: ghcr.io/open-webui/open-webui
-      tag: v0.6.33
     tika:
       enabled: true
     ollama:
