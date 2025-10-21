@@ -33,10 +33,12 @@ spec:
         enabled: true
         hosts:
           - auth.tinyrack.net
+          - authentik.tinyrack.net
         tls:
           - secretName: letsencrypt-wildcard-cert-tinyrack.net
             hosts:
               - auth.tinyrack.net
+              - authentik.tinyrack.net
       volumes: &volumes
         - name: authentik-secret
           secret:
