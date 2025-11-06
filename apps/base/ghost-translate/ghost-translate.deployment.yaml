@@ -29,7 +29,7 @@ spec:
               memory: "1Gi"
           volumeMounts:
             - mountPath: /var/lib/ghost/content
-              name: ghost-storage
+              name: ghost-translate-storage
               subPath: content
           env:
             - name: database__client
