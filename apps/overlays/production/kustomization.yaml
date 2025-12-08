@@ -7,6 +7,6 @@ resources:
   - memos.yaml
   - discourse.yaml
   - authentik.yaml
-  - metamcp.yaml
+  # - metamcp.yaml
   - litellm.yaml
   - openwebui.yaml
