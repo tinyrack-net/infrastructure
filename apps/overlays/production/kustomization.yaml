@@ -3,10 +3,10 @@ kind: Kustomization
 resources:
   - repositories.yaml
   - ghost.yaml
-  - ghost-translate.yaml
+  # - ghost-translate.yaml
   - memos.yaml
   - discourse.yaml
-  - authentik.yaml
+  # - authentik.yaml
   # - metamcp.yaml
-  - litellm.yaml
+  # - litellm.yaml
   - openwebui.yaml
