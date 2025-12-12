@@ -4,7 +4,8 @@ metadata:
   name: tailscale-pod-cidrs
   namespace: tailscale
 spec:
-  hostname: tailscale-pod-cidrs
+  hostname: tinyrack-tailscale-connector
+  exitNode: true
   subnetRouter:
     advertiseRoutes:
       - "10.55.0.0/16"
