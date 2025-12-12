@@ -5,7 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 15m
-  path: ./infrastructure/overlays/production/coredns/configs
+  path: ./infrastructure/base/coredns
   prune: true
   timeout: 2m
   sourceRef:
