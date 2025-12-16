@@ -9,4 +9,4 @@ resources:
   # - authentik.yaml
   # - metamcp.yaml
   # - litellm.yaml
-  - openwebui.yaml
+#  - openwebui.yaml
