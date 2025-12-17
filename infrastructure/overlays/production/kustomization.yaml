@@ -7,7 +7,6 @@ resources:
   - sealed-secrets.yaml
   - traefik.yaml
   - cert-manager.yaml
-  - metallb.yaml
   - cloudflared.yaml
   - tailscale.yaml
   - etcd.yaml

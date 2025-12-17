@@ -23,8 +23,3 @@ spec:
     defaultBackupStore:
       backupTarget: ""
       backupTargetCredentialSecret: ""
-    ingress:
-      enabled: true
-      host: longhorn.internal.tinyrack.net
-      tls: true
-      tlsSecret: letsencrypt-wildcard-cert-tinyrack.net

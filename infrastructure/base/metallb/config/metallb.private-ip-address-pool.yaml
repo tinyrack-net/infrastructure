@@ -1,8 +1,0 @@
-apiVersion: metallb.io/v1beta1
-kind: IPAddressPool
-metadata:
-  name: metallb-private-ip-pool
-  namespace: metallb-system
-spec:
-  addresses:
-  - 10.23.110.1/32

@@ -16,12 +16,6 @@ spec:
   timeout: 5m
   releaseName: traefik
   values:
-    ingressRoute:
-      dashboard:
-        enabled: true
-        matchRule: Host('traefik.internal.tinyrack.net')
-        tls:
-          secretName: letsencrypt-wildcard-cert-tinyrack.net
     providers:
       kubernetesCRD: 
         allowExternalNameServices: true
