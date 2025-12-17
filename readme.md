@@ -82,8 +82,7 @@ sh -s - server \
   --cluster-init \
   --cluster-cidr=10.55.0.0/16 \
   --service-cidr=10.56.0.0/16 \
-  --disable traefik \
-  --disable servicelb
+  --disable traefik
 ```
 
 설치에 사용한 옵션과 이유는 다음과 같아요.
