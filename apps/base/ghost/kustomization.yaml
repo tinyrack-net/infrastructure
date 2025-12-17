@@ -7,7 +7,7 @@ resources:
   - ghost.initial-admin.secret.yaml
   - ghost.deployment.yaml
   - ghost.service.yaml
-  - ghost.database.yaml
+#  - ghost.database.yaml
   - activity-pub.service.yaml
   # - caddy.config-map.yaml
   # - caddy.deployment.yaml
