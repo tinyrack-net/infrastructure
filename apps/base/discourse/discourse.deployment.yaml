@@ -97,7 +97,7 @@ spec:
                   name: discourse-database-user-secret
                   key: password
             - name: DISCOURSE_REDIS_HOST
-              value: "discourse-redis-master.discourse-system.svc.cluster.local"
+              value: "discourse-redis.discourse-system.svc.cluster.local"
             - name: DISCOURSE_REDIS_PORT
               value: "6379"
             - name: DISCOURSE_REDIS_USERNAME
@@ -106,7 +106,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: discourse-redis-secret
-                  key: redis-password
+                  key: password
       volumes:
         - name: discourse-storage
           persistentVolumeClaim:

@@ -1,0 +1,23 @@
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: Redis
+metadata:
+  name: discourse-redis
+  namespace: discourse-system
+spec:
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.15
+    imagePullPolicy: IfNotPresent
+    redisSecret:
+      name: discourse-redis-secret
+      key: password
+  storage:
+    volumeClaimTemplate:
+      spec:
+        storageClassName: longhorn-strict-local
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 3Gi
+  podSecurityContext:
+    runAsUser: 1000
+    fsGroup: 1000
