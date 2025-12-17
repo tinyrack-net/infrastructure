@@ -15,3 +15,5 @@ spec:
   interval: 5m
   timeout: 5m
   releaseName: ot-redis-operator
+  install:
+    crds: CreateReplace
