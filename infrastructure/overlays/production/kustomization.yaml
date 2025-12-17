@@ -1,18 +1,14 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - registry.yaml
-  - external-secrets.yaml
-  - mariadb-operator.yaml
+  - repositories.yaml
   - sealed-secrets.yaml
+  - reflector.yaml
   - traefik.yaml
   - cert-manager.yaml
   - cloudflared.yaml
-  - tailscale.yaml
-  - etcd.yaml
+#  - tailscale.yaml
+  - configs.yaml
   - longhorn.yaml
-  - repositories.yaml
+  - mariadb-operator.yaml
   - cloudnative-pg.yaml
-  - reflector.yaml
-  - s3.yaml
-  - coredns.yaml

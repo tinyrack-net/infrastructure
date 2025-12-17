@@ -23,5 +23,3 @@ spec:
         allowExternalNameServices: true
     deployment:
       replicas: 2
-    additionalArguments:
-      - "--api.dashboard=true"

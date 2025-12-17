@@ -1,0 +1,7 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - longhorn.namespace.yaml
+  - longhorn.helm-release.yaml
+  - longhorn.rwx.storage-class.yaml
+  - longhorn.strict-local.storage-class.yaml

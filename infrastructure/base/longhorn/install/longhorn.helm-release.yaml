@@ -17,9 +17,16 @@ spec:
   releaseName: longhorn
   values:
     persistence:
-      defaultClassReplicaCount: 1
+      defaultClass: true
     longhornUI:
       replicas: 1
+    defaultSettings:
+      storageMinimalAvailablePercentage: 5
     defaultBackupStore:
-      backupTarget: ""
-      backupTargetCredentialSecret: ""
+      backupTarget: s3://tinyrack-prod@hetzner/longhorn
+      backupTargetCredentialSecret: tinyrack-s3-secret
+#    ingress:
+#      enabled: true
+#      host: longhorn.internal.tinyrack.net
+#      tls: true
+#      tlsSecret: letsencrypt-wildcard-cert-tinyrack.net

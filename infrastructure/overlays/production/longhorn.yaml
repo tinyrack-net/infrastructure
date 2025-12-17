@@ -1,37 +1,18 @@
-# longhorn 배포
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: longhorn-deployment
+  name: longhorn
   namespace: flux-system
 spec:
   interval: 15m
-  path: ./infrastructure/overlays/production/longhorn/deployment
+  path: ./infrastructure/base/longhorn
   prune: true
-  timeout: 10m
+  timeout: 5m
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
   dependsOn:
-    - name: s3-configs
-    - name: reflector
     - name: infrastructure-repositories
-    # - name: coredns-configs
-  sourceRef:
-    kind: GitRepository
-    name: flux-system
----
-# longhorn crd 설정
-apiVersion: kustomize.toolkit.fluxcd.io/v1
-kind: Kustomization
-metadata:
-  name: longhorn-custom-resource-definitions
-  namespace: flux-system
-spec:
-  interval: 15m
-  path: ./infrastructure/overlays/production/longhorn/crds
-  prune: true
-  timeout: 2m
-  sourceRef:
-    kind: GitRepository
-    name: flux-system
-  dependsOn:
-    - name: longhorn-deployment
----
+    - name: sealed-secrets
+    - name: reflector
