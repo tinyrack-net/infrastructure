@@ -7,7 +7,7 @@ resources:
   - discourse.smtp.secret.yaml
   - discourse.redis.secret.yaml
   - discourse.database-15.yaml
-#  - discourse.redis.yaml
+  - discourse.redis.yaml
 #  - discourse.deployment.yaml
 #  - discourse.service.yaml
 #  - discourse.ingress.yaml
