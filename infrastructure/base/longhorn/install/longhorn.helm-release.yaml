@@ -29,4 +29,4 @@ spec:
 #      enabled: true
 #      host: longhorn.internal.tinyrack.net
 #      tls: true
-#      tlsSecret: letsencrypt-wildcard-cert-tinyrack.net
+#      tlsSecret: letsencrypt-cert

@@ -22,4 +22,4 @@ spec:
   tls:
     - hosts:
         - "forum.tinyrack.net"
-      secretName: letsencrypt-wildcard-cert-tinyrack.net
+      secretName: letsencrypt-cert
