@@ -10,3 +10,4 @@ resources:
   - tailscale.yaml
   - reflector.yaml
   - jetstack.yaml
+  - ot-container-kit.yaml
