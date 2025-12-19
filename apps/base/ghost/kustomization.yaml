@@ -5,7 +5,7 @@ resources:
   - ghost.database.secret.yaml
   - ghost.smtp.secret.yaml
   - ghost.initial-admin.secret.yaml
-  - ghost.database.yaml
+  # - ghost.database.yaml
 #  - ghost.deployment.yaml
 #  - ghost.service.yaml
 #  - activity-pub.service.yaml
