@@ -23,7 +23,7 @@ spec:
         key: mysql-root-password
       storage:
         storageClass: local-path
-        size: 100Gi
+        size: 10Gi
       replicas: 1
       galera:
         enabled: false
