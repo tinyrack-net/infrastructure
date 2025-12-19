@@ -29,11 +29,10 @@ spec:
         enabled: false
       replication:
         enabled: false
-      bootstrapFrom:
-        
-        backupRef:
-          name: physicalbackup
-          kind: PhysicalBackup
+      # bootstrapFrom:
+      #   backupRef:
+      #     name: physicalbackup
+      #     kind: PhysicalBackup
     databases:
       - name: ghost
         characterSet: utf8
