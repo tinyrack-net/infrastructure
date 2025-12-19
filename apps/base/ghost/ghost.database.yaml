@@ -22,14 +22,15 @@ spec:
         name: ghost-database-secret
         key: mysql-root-password
       storage:
-        storageClass: longhorn-strict-local
-        size: 10Gi
+        storageClass: local-path
+        size: 40Gi
       replicas: 1
       galera:
         enabled: false
       replication:
         enabled: false
       bootstrapFrom:
+        
         backupRef:
           name: physicalbackup
           kind: PhysicalBackup
