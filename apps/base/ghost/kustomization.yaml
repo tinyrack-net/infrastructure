@@ -6,11 +6,11 @@ resources:
   - ghost.smtp.secret.yaml
   - ghost.initial-admin.secret.yaml
   - ghost.database.yaml
-#  - ghost.deployment.yaml
-#  - ghost.service.yaml
+  - ghost.deployment.yaml
+  - ghost.service.yaml
 #  - activity-pub.service.yaml
   # - caddy.config-map.yaml
   # - caddy.deployment.yaml
   # - caddy.service.yaml
-#  - ghost.ingress-route.yaml
+  - ghost.ingress-route.yaml
 #  - ghost.ingress.yaml

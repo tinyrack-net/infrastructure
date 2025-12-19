@@ -15,39 +15,39 @@ spec:
   tls:
     secretName: letsencrypt-cert
 
----
-apiVersion: traefik.io/v1alpha1
-kind: IngressRoute
-metadata:
-  name: ghost-activity-pub-ingress-route
-  namespace: ghost-system
-spec:
-  entryPoints:
-    - websecure
-  routes:
-    - match: Host(`tinyrack.net`) && PathPrefix(`/.ghost/activitypub/`)
-      kind: Rule
-      priority: 1
-      services:
-        - name: ghost-activity-pub-external
-          port: 443
-          scheme: https
-          passHostHeader: true
-    - match: Host(`tinyrack.net`) && Path(`/.well-known/webfinger`)
-      kind: Rule
-      priority: 1
-      services:
-        - name: ghost-activity-pub-external
-          port: 443
-          scheme: https
-          passHostHeader: true
-    - match: Host(`tinyrack.net`) && Path(`/.well-known/nodeinfo`)
-      kind: Rule
-      priority: 1
-      services:
-        - name: ghost-activity-pub-external
-          port: 443
-          scheme: https
-          passHostHeader: true
-  tls:
-    secretName: letsencrypt-cert
+# ---
+# apiVersion: traefik.io/v1alpha1
+# kind: IngressRoute
+# metadata:
+#   name: ghost-activity-pub-ingress-route
+#   namespace: ghost-system
+# spec:
+#   entryPoints:
+#     - websecure
+#   routes:
+#     - match: Host(`tinyrack.net`) && PathPrefix(`/.ghost/activitypub/`)
+#       kind: Rule
+#       priority: 1
+#       services:
+#         - name: ghost-activity-pub-external
+#           port: 443
+#           scheme: https
+#           passHostHeader: true
+#     - match: Host(`tinyrack.net`) && Path(`/.well-known/webfinger`)
+#       kind: Rule
+#       priority: 1
+#       services:
+#         - name: ghost-activity-pub-external
+#           port: 443
+#           scheme: https
+#           passHostHeader: true
+#     - match: Host(`tinyrack.net`) && Path(`/.well-known/nodeinfo`)
+#       kind: Rule
+#       priority: 1
+#       services:
+#         - name: ghost-activity-pub-external
+#           port: 443
+#           scheme: https
+#           passHostHeader: true
+#   tls:
+#     secretName: letsencrypt-cert
