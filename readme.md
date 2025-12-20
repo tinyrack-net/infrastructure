@@ -72,6 +72,14 @@ flowchart TB
 
 # 설치
 
+## Tailscale 설정
+
+```bash
+sudo tailscale up \
+  --accept-dns=false \
+  --reset
+```
+
 ## K3S 설치
 
 먼저 쿠버네티스를 설치해요. 저는 [K3S](https://k3s.io/)라는 가벼운 배포판을 사용하고 있어요.
@@ -82,6 +90,8 @@ sh -s - server \
   --cluster-init \
   --cluster-cidr=10.55.0.0/16 \
   --service-cidr=10.56.0.0/16 \
+  --tls-san=100.65.57.48 \
+  --tls-san=tinyrack.time-inconnu.ts.net \
   --disable traefik
 ```
 
