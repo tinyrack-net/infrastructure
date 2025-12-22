@@ -29,10 +29,9 @@ spec:
         enabled: false
       replication:
         enabled: false
-      # bootstrapFrom:
-      #   backupRef:
-      #     name: physicalbackup
-      #     kind: PhysicalBackup
+      bootstrapFrom:
+        backupRef:
+          name: ghost-backup
     databases:
       - name: ghost
         characterSet: utf8
@@ -61,26 +60,24 @@ spec:
         cleanupPolicy: Delete
         requeueInterval: 10h
         retryInterval: 30s
-    # physicalBackups:
-    #   - name: physicalbackup
-    #     schedule:
-    #       cron: '0 */4 * * *'
-    #       suspend: false
-    #       immediate: true
-    #     compression: gzip
-    #     maxRetention: 720h
-    #     storage:
-    #       s3:
-    #         bucket: tinyrack-prod
-    #         prefix: apps/ghost/mariadb-11
-    #         endpoint: fsn1.your-objectstorage.com
-    #         region: hetzner
-    #         accessKeyIdSecretKeyRef:
-    #           name: tinyrack-s3-secret
-    #           key: AWS_ACCESS_KEY_ID
-    #         secretAccessKeySecretKeyRef:
-    #           name: tinyrack-s3-secret
-    #           key: AWS_SECRET_ACCESS_KEY
-    #         tls:
-    #           enabled: true
-
+    backups:
+      - name: ghost-backup
+        schedule:
+          cron: "0 */4 * * *"
+          suspend: false
+        compression: gzip
+        maxRetention: 720h
+        storage:
+          s3:
+            bucket: tinyrack-prod
+            prefix: apps/ghost/mariadb-11-logical
+            endpoint: fsn1.your-objectstorage.com
+            region: hetzner
+            accessKeyIdSecretKeyRef:
+              name: tinyrack-s3-secret
+              key: AWS_ACCESS_KEY_ID
+            secretAccessKeySecretKeyRef:
+              name: tinyrack-s3-secret
+              key: AWS_SECRET_ACCESS_KEY
+            tls:
+              enabled: true
