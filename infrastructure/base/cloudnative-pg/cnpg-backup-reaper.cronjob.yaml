@@ -1,0 +1,82 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cnpg-backup-reaper
+  namespace: cnpg-system
+spec:
+  schedule: "17 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        spec:
+          serviceAccountName: cnpg-backup-reaper
+          restartPolicy: Never
+          containers:
+            - name: reaper
+              image: bitnami/kubectl:latest
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: STALE_RUNNING_HOURS
+                  value: "24"
+                - name: STALE_EMPTY_HOURS
+                  value: "12"
+                - name: PRUNE_COMPLETED_DAYS
+                  value: "30"
+                - name: PRUNE_FAILED_DAYS
+                  value: "14"
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -eu
+
+                  now="$(date -u +%s)"
+                  running_ttl="$((STALE_RUNNING_HOURS * 3600))"
+                  empty_ttl="$((STALE_EMPTY_HOURS * 3600))"
+                  completed_ttl="$((PRUNE_COMPLETED_DAYS * 86400))"
+                  failed_ttl="$((PRUNE_FAILED_DAYS * 86400))"
+
+                  kubectl get backups.postgresql.cnpg.io -A \
+                    -o go-template='{{range .items}}{{.metadata.namespace}}{{"|"}}{{.metadata.name}}{{"|"}}{{if .status}}{{if .status.phase}}{{.status.phase}}{{end}}{{end}}{{"|"}}{{.metadata.creationTimestamp}}{{"|"}}{{if .status}}{{if .status.startedAt}}{{.status.startedAt}}{{end}}{{end}}{{"\n"}}{{end}}' \
+                  | while IFS='|' read -r namespace name phase created_at started_at; do
+                      created_epoch="$(date -u -d "$created_at" +%s)"
+                      age_since_create="$((now - created_epoch))"
+
+                      delete_reason=""
+                      case "$phase" in
+                        running)
+                          ref_time="$created_at"
+                          if [ -n "$started_at" ]; then
+                            ref_time="$started_at"
+                          fi
+                          ref_epoch="$(date -u -d "$ref_time" +%s)"
+                          if [ "$((now - ref_epoch))" -ge "$running_ttl" ]; then
+                            delete_reason="stale-running"
+                          fi
+                          ;;
+                        completed)
+                          if [ "$age_since_create" -ge "$completed_ttl" ]; then
+                            delete_reason="old-completed"
+                          fi
+                          ;;
+                        failed)
+                          if [ "$age_since_create" -ge "$failed_ttl" ]; then
+                            delete_reason="old-failed"
+                          fi
+                          ;;
+                        "")
+                          if [ "$age_since_create" -ge "$empty_ttl" ]; then
+                            delete_reason="stale-pending"
+                          fi
+                          ;;
+                      esac
+
+                      if [ -n "$delete_reason" ]; then
+                        echo "Deleting ${namespace}/${name} (${phase:-empty}) because ${delete_reason}"
+                        kubectl delete backups.postgresql.cnpg.io -n "$namespace" "$name" --wait=false
+                      fi
+                    done
