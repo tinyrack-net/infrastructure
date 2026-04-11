@@ -126,13 +126,11 @@ sudo kubectl -n sealed-secrets apply -f main.key.yaml --force
 이제 Flux를 연동하고 모든 인프라를 복원해요.
 
 ```bash
-flux bootstrap gitea \
-  --token-auth \
-  --hostname=git.winetree94.com \
+flux bootstrap github \
   --repository=infrastructure \
   --branch=main \
   --path=./clusters/production \
-  --owner=tinyrack
+  --owner=tinyrack-net
 ```
 
 ## 롱혼에서 서비스의 PVC 복원
