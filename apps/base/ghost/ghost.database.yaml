@@ -27,6 +27,7 @@ spec:
       rootPasswordSecretKeyRef:
         name: ghost-database-secret
         key: mysql-root-password
+        generate: false
       storage:
         storageClass: local-path
         size: 10Gi
