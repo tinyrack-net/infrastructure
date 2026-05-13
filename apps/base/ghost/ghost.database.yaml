@@ -29,9 +29,6 @@ spec:
         enabled: false
       replication:
         enabled: false
-      bootstrapFrom:
-        backupRef:
-          name: ghost-backup
     databases:
       - name: ghost
         characterSet: utf8
