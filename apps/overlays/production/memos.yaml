@@ -16,3 +16,4 @@ spec:
   wait: true
   dependsOn:
     - name: load-repositories
+    - name: cloudnative-pg

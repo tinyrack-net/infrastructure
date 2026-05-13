@@ -1,3 +1,26 @@
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: memos-database-backup-store
+  namespace: memos-system
+spec:
+  retentionPolicy: 30d
+  configuration:
+    destinationPath: s3://tinyrack-prod/apps/memos/database
+    endpointURL: https://fsn1.your-objectstorage.com
+    s3Credentials:
+      accessKeyId:
+        name: tinyrack-s3-secret
+        key: AWS_ACCESS_KEY_ID
+      secretAccessKey:
+        name: tinyrack-s3-secret
+        key: AWS_SECRET_ACCESS_KEY
+    data:
+      compression: gzip
+    wal:
+      compression: gzip
+      maxParallel: 8
+---
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
@@ -19,27 +42,18 @@ spec:
       volumeMode: Filesystem
   monitoring:
     enablePodMonitor: true
-  backup:
-    retentionPolicy: 30d
-    barmanObjectStore: &barmanObjectStore
-      destinationPath: s3://tinyrack-prod/apps/memos/database
-      endpointURL: https://fsn1.your-objectstorage.com
-      s3Credentials:
-        accessKeyId:
-          name: tinyrack-s3-secret
-          key: AWS_ACCESS_KEY_ID
-        secretAccessKey:
-          name: tinyrack-s3-secret
-          key: AWS_SECRET_ACCESS_KEY
-      serverName: memos-database
-      data:
-        compression: gzip
-      wal:
-        compression: gzip
-        maxParallel: 8
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: memos-database-backup-store
   externalClusters:
     - name: memos-database
-      barmanObjectStore: *barmanObjectStore
+      plugin:
+        name: barman-cloud.cloudnative-pg.io
+        parameters:
+          barmanObjectName: memos-database-backup-store
+          serverName: memos-database
 
   enableSuperuserAccess: true
   superuserSecret:
@@ -65,5 +79,8 @@ metadata:
 spec:
   schedule: "0 0 */4 * * *"
   backupOwnerReference: self
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io
   cluster:
     name: memos-database-cluster
