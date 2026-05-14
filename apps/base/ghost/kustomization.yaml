@@ -6,6 +6,7 @@ resources:
   - ghost.smtp.secret.yaml
   - ghost.initial-admin.secret.yaml
   - ghost.database.yaml
+  - ghost.storage.pvc.yaml
   - ghost.deployment.yaml
   - ghost.service.yaml
 #  - activity-pub.service.yaml
