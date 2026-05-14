@@ -67,8 +67,6 @@ spec:
               value: "mail.winetree94.com"
             - name: DISCOURSE_SMTP_PORT
               value: "465"
-            - name: DISCOURSE_SMTP_ENABLE_START_TLS
-              value: "false"
             - name: DISCOURSE_SMTP_FORCE_TLS
               value: "true"
             - name: DISCOURSE_SMTP_USER_NAME
