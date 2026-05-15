@@ -71,6 +71,10 @@ spec:
         secrets:
           - alertmanager-telegram
     grafana:
+      deploymentStrategy:
+        type: Recreate
+      initChownData:
+        enabled: false
       additionalDataSources:
         - name: Loki
           type: loki
