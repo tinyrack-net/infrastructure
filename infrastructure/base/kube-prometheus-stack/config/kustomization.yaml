@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - kube-prometheus-stack.prometheus-rules.yaml
+  - monitors/flux.podmonitor.yaml
+  - monitors/cert-manager.servicemonitor.yaml
+  - monitors/longhorn.servicemonitor.yaml
+  - monitors/cnpg.podmonitor.yaml
+  - monitors/traefik.podmonitor.yaml

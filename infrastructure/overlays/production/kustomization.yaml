@@ -13,3 +13,8 @@ resources:
   - mariadb-operator.yaml
   - cloudnative-pg.yaml
   - ot-redis-operator.yaml
+  - kube-prometheus-stack.yaml
+  - kube-prometheus-stack-config.yaml
+  - loki.yaml
+  - alloy.yaml
+  - blackbox-exporter.yaml

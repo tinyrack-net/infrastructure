@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: tinyrack-server-http-endpoints
+  namespace: kube-prometheus-stack-system
+  labels:
+    release: kube-prometheus-stack
+spec:
+  interval: 1m
+  scrapeTimeout: 30s
+  module: http_2xx
+  prober:
+    url: blackbox-exporter-prometheus-blackbox-exporter.observability-system.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      static:
+        - https://tinyrack.net
+        - https://forum.tinyrack.net
+        - https://notes.tinyrack.net

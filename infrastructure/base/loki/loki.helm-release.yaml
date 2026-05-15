@@ -1,0 +1,104 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: loki-release
+  namespace: flux-system
+spec:
+  targetNamespace: observability-system
+  storageNamespace: observability-system
+  install:
+    createNamespace: true
+  chart:
+    spec:
+      chart: loki
+      version: "7.0.0"
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: flux-system
+  interval: 5m
+  timeout: 10m
+  releaseName: loki
+  values:
+    deploymentMode: SingleBinary
+    gateway:
+      enabled: false
+    lokiCanary:
+      enabled: false
+    chunksCache:
+      enabled: false
+    resultsCache:
+      enabled: false
+    test:
+      enabled: false
+    loki:
+      auth_enabled: false
+      commonConfig:
+        replication_factor: 1
+      compactor:
+        compaction_interval: 10m
+        delete_request_store: filesystem
+        retention_delete_delay: 2h
+        retention_delete_worker_count: 150
+        retention_enabled: true
+        working_directory: /var/loki/compactor
+      limits_config:
+        retention_period: 720h
+      schemaConfig:
+        configs:
+          - from: "2024-04-01"
+            store: tsdb
+            object_store: s3
+            schema: v13
+            index:
+              prefix: index_
+              period: 24h
+      storage:
+        type: s3
+        bucketNames:
+          chunks: tinyrack-server-loki
+          ruler: tinyrack-server-loki
+          admin: tinyrack-server-loki
+        s3:
+          endpoint: ${AWS_ENDPOINTS}
+          region: ${AWS_REGION}
+          accessKeyId: ${AWS_ACCESS_KEY_ID}
+          secretAccessKey: ${AWS_SECRET_ACCESS_KEY}
+          s3ForcePathStyle: true
+          insecure: false
+    singleBinary:
+      replicas: 1
+      extraArgs:
+        - -config.expand-env=true
+      extraEnv:
+        - name: AWS_REGION
+          value: us-east-1
+      extraEnvFrom:
+        - secretRef:
+            name: tinyrack-s3-secret
+      persistence:
+        enabled: true
+        storageClass: longhorn
+        accessModes:
+          - ReadWriteOnce
+        size: 5Gi
+        enableStatefulSetAutoDeletePVC: false
+        whenDeleted: Retain
+        whenScaled: Retain
+    read:
+      replicas: 0
+    write:
+      replicas: 0
+    backend:
+      replicas: 0
+    monitoring:
+      dashboards:
+        enabled: false
+      rules:
+        enabled: false
+      serviceMonitor:
+        enabled: false
+      selfMonitoring:
+        enabled: false
+        grafanaAgent:
+          installOperator: false
