@@ -71,9 +71,6 @@ spec:
         secrets:
           - alertmanager-telegram
     grafana:
-      deploymentStrategy:
-        type: Recreate
-        rollingUpdate: null
       initChownData:
         enabled: false
       additionalDataSources:
