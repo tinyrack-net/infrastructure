@@ -69,13 +69,13 @@ spec:
     - name: tinyrack-server.longhorn
       rules:
         - alert: TinyrackServerLonghornVolumeUnhealthy
-          expr: longhorn_volume_robustness != 1
+          expr: longhorn_volume_robustness{state!="healthy"} == 1
           for: 10m
           labels:
             severity: warning
           annotations:
             summary: Longhorn volume {{ $labels.volume }} is not healthy
-            description: Longhorn reports volume robustness as {{ $labels.robustness }} for more than 10 minutes.
+            description: Longhorn reports volume robustness state {{ $labels.state }} for more than 10 minutes.
     - name: tinyrack-server.certificates
       rules:
         - alert: TinyrackServerCertificateExpiringSoon

@@ -86,6 +86,12 @@ spec:
         size: 2Gi
       ingress:
         enabled: false
+    kubeControllerManager:
+      enabled: false
+    kubeProxy:
+      enabled: false
+    kubeScheduler:
+      enabled: false
     prometheus:
       prometheusSpec:
         externalLabels:

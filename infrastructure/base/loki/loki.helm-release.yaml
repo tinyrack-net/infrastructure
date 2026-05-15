@@ -78,7 +78,7 @@ spec:
             name: tinyrack-s3-secret
       persistence:
         enabled: true
-        storageClass: longhorn
+        storageClass: longhorn-strict-local
         accessModes:
           - ReadWriteOnce
         size: 5Gi
