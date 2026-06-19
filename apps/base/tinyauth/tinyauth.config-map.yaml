@@ -33,10 +33,19 @@ data:
       session_secret: ${TINYAUTH_SESSION_SECRET}
       hash_secret: ${TINYAUTH_HASH_SECRET}
 
+    email:
+      transport: smtp
+      host: mail.winetree94.com
+      port: 465
+      secure: true
+      user: ${TINYAUTH_SMTP_USER}
+      password: ${TINYAUTH_SMTP_PASSWORD}
+      from: noreply@tinyrack.net
+
     registration:
-      enabled: false
+      enabled: true
       allowed_email_patterns: []
-      email_verification_required: false
+      email_verification_required: true
 
     auth:
       password:
