@@ -1,0 +1,33 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: tinyauth-database-cluster
+  namespace: tinyauth-system
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17-bookworm
+  postgresql:
+    parameters:
+      max_connections: "500"
+  storage:
+    pvcTemplate:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 32Gi
+      storageClassName: longhorn-strict-local
+      volumeMode: Filesystem
+  monitoring:
+    enablePodMonitor: true
+
+  enableSuperuserAccess: true
+  superuserSecret:
+    name: tinyauth-database-superuser-secret
+
+  bootstrap:
+    initdb:
+      database: tinyauth
+      owner: tinyauth
+      secret:
+        name: tinyauth-database-user-secret

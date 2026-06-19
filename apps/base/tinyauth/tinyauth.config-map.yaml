@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tinyauth-config
+  namespace: tinyauth-system
+data:
+  config.yaml: |
+    server:
+      public_origin: https://auth.tinyrack.net
+      listen_port: 8080
+      trust_proxy: true
+
+    frontend:
+      enabled: true
+      mode: static
+      path: /opt/tinyauth/frontend
+      html_variables:
+        APP_NAME: TinyAuth
+
+    logging:
+      level: info
+      format: json
+
+    database:
+      type: postgres
+      host: tinyauth-database-cluster-rw.tinyauth-system.svc.cluster.local
+      port: 5432
+      user: ${TINYAUTH_DATABASE_USER}
+      password: ${TINYAUTH_DATABASE_PASSWORD}
+      name: tinyauth
+
+    security:
+      session_secret: ${TINYAUTH_SESSION_SECRET}
+      hash_secret: ${TINYAUTH_HASH_SECRET}
+
+    registration:
+      enabled: false
+      allowed_email_patterns: []
+      email_verification_required: false
+
+    auth:
+      password:
+        enabled: true
+        two_factor:
+          enrollment_required: true
+        totp:
+          enabled: true
+      passkey:
+        enabled: true
+
+    terms: []
+
+    clients:
+      - id: discourse
+        name: Discourse
+        client_id: discourse
+        client_secret: ${TINYAUTH_DISCOURSE_CLIENT_SECRET}
+        redirect_uris:
+          - https://forum.tinyrack.net/auth/oidc/callback
+        response_types:
+          - code
+        grant_types:
+          - authorization_code
+          - refresh_token
+        scope: openid profile email

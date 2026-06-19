@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tinyauth
+  namespace: tinyauth-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tinyauth
+  template:
+    metadata:
+      annotations:
+        tinyauth.tinyrack.net/config-revision: initial-20260619
+      labels:
+        app: tinyauth
+    spec:
+      containers:
+        - name: tinyauth
+          image: ghcr.io/tinyrack-net/tinyauth:0.4.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - node
+            - dist/cli.js
+            - serve
+            - --config-path=/config/config.yaml
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          envFrom:
+            - secretRef:
+                name: tinyauth-secrets
+          env:
+            - name: NODE_EXTRA_CA_CERTS
+              value: /etc/tinyauth/database-ca/ca.crt
+            - name: TINYAUTH_DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: tinyauth-database-user-secret
+                  key: username
+            - name: TINYAUTH_DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: tinyauth-database-user-secret
+                  key: password
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "2"
+              memory: "1Gi"
+          volumeMounts:
+            - name: config
+              mountPath: /config/config.yaml
+              subPath: config.yaml
+              readOnly: true
+            - name: database-ca
+              mountPath: /etc/tinyauth/database-ca
+              readOnly: true
+          livenessProbe:
+            httpGet:
+              path: /api/health/live
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/health/ready
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+      volumes:
+        - name: config
+          configMap:
+            name: tinyauth-config
+        - name: database-ca
+          secret:
+            secretName: tinyauth-database-cluster-ca
+            items:
+              - key: ca.crt
+                path: ca.crt
