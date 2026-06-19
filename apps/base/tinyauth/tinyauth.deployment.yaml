@@ -11,7 +11,7 @@ spec:
   template:
     metadata:
       annotations:
-        tinyauth.tinyrack.net/config-revision: upstream-idps-20260619
+        tinyauth.tinyrack.net/config-revision: branding-20260619
       labels:
         app: tinyauth
     spec:
