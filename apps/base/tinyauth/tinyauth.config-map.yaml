@@ -59,6 +59,29 @@ data:
 
     terms: []
 
+    identity_providers:
+      - id: google
+        type: google
+        enabled: true
+        display_name: Google
+        client_id: ${TINYAUTH_GOOGLE_CLIENT_ID}
+        client_secret: ${TINYAUTH_GOOGLE_CLIENT_SECRET}
+        email_conflict_strategy: auto_link
+      - id: github
+        type: github
+        enabled: true
+        display_name: GitHub
+        client_id: ${TINYAUTH_GITHUB_CLIENT_ID}
+        client_secret: ${TINYAUTH_GITHUB_CLIENT_SECRET}
+        email_conflict_strategy: auto_link
+      - id: apple
+        type: apple
+        enabled: true
+        display_name: Apple
+        client_id: ${TINYAUTH_APPLE_CLIENT_ID}
+        client_secret: ${TINYAUTH_APPLE_CLIENT_SECRET}
+        email_conflict_strategy: auto_link
+
     clients:
       - id: discourse
         name: Discourse
