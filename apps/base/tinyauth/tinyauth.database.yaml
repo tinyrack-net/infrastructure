@@ -19,7 +19,7 @@ spec:
       storageClassName: longhorn-strict-local
       volumeMode: Filesystem
   monitoring:
-    enablePodMonitor: true
+    enablePodMonitor: false
 
   enableSuperuserAccess: true
   superuserSecret:

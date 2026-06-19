@@ -41,7 +41,7 @@ spec:
       storageClassName: local-path
       volumeMode: Filesystem
   monitoring:
-    enablePodMonitor: true
+    enablePodMonitor: false
   plugins:
     - name: barman-cloud.cloudnative-pg.io
       isWALArchiver: true
