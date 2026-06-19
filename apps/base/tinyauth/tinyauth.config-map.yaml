@@ -109,3 +109,4 @@ data:
           - authorization_code
           - refresh_token
         scope: openid profile email
+        skip_consent: true
