@@ -7,7 +7,7 @@ spec:
   chart:
     spec:
       chart: longhorn
-      version: "1.11.2"
+      version: "1.12.0"
       sourceRef:
         kind: HelmRepository
         name: longhorn
@@ -23,6 +23,7 @@ spec:
     defaultSettings:
       storageMinimalAvailablePercentage: 5
       defaultReplicaCount: 1
+      concurrentAutomaticEngineUpgradePerNodeLimit: 0
     defaultBackupStore:
       backupTarget: s3://tinyrack-prod@hetzner/longhorn
       backupTargetCredentialSecret: tinyrack-s3-secret
