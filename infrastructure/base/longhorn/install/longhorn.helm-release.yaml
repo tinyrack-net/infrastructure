@@ -23,7 +23,7 @@ spec:
     defaultSettings:
       storageMinimalAvailablePercentage: 5
       defaultReplicaCount: 1
-      concurrentAutomaticEngineUpgradePerNodeLimit: 0
+      concurrentAutomaticEngineUpgradePerNodeLimit: 1
     defaultBackupStore:
       backupTarget: s3://tinyrack-prod@hetzner/longhorn
       backupTargetCredentialSecret: tinyrack-s3-secret
