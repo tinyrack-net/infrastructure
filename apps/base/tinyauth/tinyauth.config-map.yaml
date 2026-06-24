@@ -21,7 +21,7 @@ data:
       theme_mode: system
       light_theme: light
       dark_theme: black
-      background_url: https://images.unsplash.com/photo-1558494949-ef010cbdcc31?ixlib=rb-4.1.0&auto=format&fit=crop&q=80&w=2070
+      background_url: https://images.pexels.com/photos/5912576/pexels-photo-5912576.jpeg?auto=compress&cs=tinysrgb&w=1920
       title:
         ko: 타이니랙
         en: Tinyrack

@@ -11,7 +11,7 @@ spec:
   template:
     metadata:
       annotations:
-        tinyauth.tinyrack.net/config-revision: skip-consent-20260620-0347
+        tinyauth.tinyrack.net/config-revision: branding-20260624-154518
       labels:
         app: tinyauth
     spec:
