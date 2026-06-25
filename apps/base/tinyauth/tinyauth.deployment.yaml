@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: tinyauth
-          image: ghcr.io/tinyrack-net/tinyauth:0.7.0 # {"$imagepolicy": "flux-system:tinyauth"}
+          image: ghcr.io/tinyrack-net/tinyauth:0.8.0 # {"$imagepolicy": "flux-system:tinyauth"}
           imagePullPolicy: IfNotPresent
           command:
             - node
