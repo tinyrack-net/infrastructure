@@ -41,6 +41,8 @@ spec:
         env:
           - name: MEMOS_DRIVER
             value: "postgres"
+          - name: MEMOS_INSTANCE_URL
+            value: "https://notes.tinyrack.net"
           - name: MEMOS_DSN
             valueFrom:
               secretKeyRef:
