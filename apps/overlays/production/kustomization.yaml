@@ -5,3 +5,4 @@ resources:
   - memos.yaml
   - discourse.yaml
   - tinyauth.yaml
+  - coder-relay.yaml

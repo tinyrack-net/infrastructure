@@ -1,0 +1,38 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: coder-relay
+  namespace: coder-relay-system
+  annotations:
+    ingress.kubernetes.io/force-ssl-redirect: "true"
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: relay.tinyrack.net
+      http:
+        paths:
+          - path: /v1/ws
+            pathType: Prefix
+            backend:
+              service:
+                name: coder-relay
+                port:
+                  name: http
+          - path: /health/live
+            pathType: Exact
+            backend:
+              service:
+                name: coder-relay
+                port:
+                  name: http
+          - path: /health/ready
+            pathType: Exact
+            backend:
+              service:
+                name: coder-relay
+                port:
+                  name: http
+  tls:
+    - hosts:
+        - relay.tinyrack.net
+      secretName: letsencrypt-cert
