@@ -8,7 +8,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-    - host: relay.tinyrack.net
+    - host: relay.coder.tinyrack.net
       http:
         paths:
           - path: /v1/ws
@@ -34,5 +34,5 @@ spec:
                   name: http
   tls:
     - hosts:
-        - relay.tinyrack.net
+        - relay.coder.tinyrack.net
       secretName: letsencrypt-cert
