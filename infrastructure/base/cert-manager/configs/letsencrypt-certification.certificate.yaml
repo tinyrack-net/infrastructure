@@ -18,3 +18,4 @@ spec:
     - "tinyrack.net"
     - "*.tinyrack.net"
     - "*.coder.tinyrack.net"
+    - "*.tinest.tinyrack.net"
