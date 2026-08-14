@@ -58,7 +58,7 @@ metadata:
   name: coder-relay
   namespace: flux-system
 spec:
-  image: ghcr.io/tinyrack-net/coder-relay
+  image: ghcr.io/tinyrack-net/tinest-relay
   interval: 5m
 ---
 apiVersion: image.toolkit.fluxcd.io/v1
