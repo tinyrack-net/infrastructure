@@ -18,7 +18,7 @@ spec:
       terminationGracePeriodSeconds: 35
       containers:
         - name: coder-relay
-          image: ghcr.io/tinyrack-net/tinest-relay:v0.5.2 # {"$imagepolicy": "flux-system:coder-relay"}
+          image: ghcr.io/tinyrack-net/tinest-relay:v0.6.0 # {"$imagepolicy": "flux-system:coder-relay"}
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
