@@ -9,4 +9,3 @@ resources:
   - tinyauth.config-map.yaml
   - tinyauth.deployment.yaml
   - tinyauth.service.yaml
-  - tinyauth.ingress.yaml
