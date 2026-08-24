@@ -9,3 +9,4 @@ resources:
   - issuary.config-map.yaml
   - issuary.deployment.yaml
   - issuary.service.yaml
+  - issuary.ingress.yaml
