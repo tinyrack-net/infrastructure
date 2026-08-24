@@ -1,28 +1,6 @@
 apiVersion: barmancloud.cnpg.io/v1
 kind: ObjectStore
 metadata:
-  name: tinyauth-database-backup-source
-  namespace: issuary-system
-spec:
-  configuration:
-    destinationPath: s3://tinyrack-prod/apps/tinyauth/database
-    endpointURL: https://fsn1.your-objectstorage.com
-    s3Credentials:
-      accessKeyId:
-        name: tinyrack-s3-secret
-        key: AWS_ACCESS_KEY_ID
-      secretAccessKey:
-        name: tinyrack-s3-secret
-        key: AWS_SECRET_ACCESS_KEY
-    data:
-      compression: gzip
-    wal:
-      compression: gzip
-      maxParallel: 8
----
-apiVersion: barmancloud.cnpg.io/v1
-kind: ObjectStore
-metadata:
   name: issuary-database-backup-store
   namespace: issuary-system
 spec:
@@ -73,12 +51,12 @@ spec:
         barmanObjectName: issuary-database-backup-store
 
   externalClusters:
-    - name: tinyauth-source
+    - name: issuary-source
       plugin:
         name: barman-cloud.cloudnative-pg.io
         parameters:
-          barmanObjectName: tinyauth-database-backup-source
-          serverName: tinyauth-database-cluster
+          barmanObjectName: issuary-database-backup-store
+          serverName: issuary-database-cluster
 
   enableSuperuserAccess: true
   superuserSecret:
@@ -86,7 +64,7 @@ spec:
 
   bootstrap:
     recovery:
-      source: tinyauth-source
+      source: issuary-source
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: ScheduledBackup
