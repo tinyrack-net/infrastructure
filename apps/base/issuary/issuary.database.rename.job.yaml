@@ -1,0 +1,65 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: issuary-database-rename-20260825
+  namespace: issuary-system
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 900
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: rename-database-and-role
+          image: postgres:17-bookworm
+          command:
+            - /bin/sh
+            - -euc
+            - |
+              attempts=0
+              until pg_isready --quiet; do
+                attempts=$((attempts + 1))
+                if [ "$attempts" -ge 120 ]; then
+                  echo "database did not become ready"
+                  exit 1
+                fi
+                sleep 5
+              done
+
+              old_database=$(psql -Atqc "SELECT count(*) FROM pg_database WHERE datname = 'tinyauth'")
+              new_database=$(psql -Atqc "SELECT count(*) FROM pg_database WHERE datname = 'issuary'")
+              if [ "$old_database" = "1" ] && [ "$new_database" = "0" ]; then
+                psql -v ON_ERROR_STOP=1 -c 'ALTER DATABASE tinyauth RENAME TO issuary'
+              elif [ "$old_database" != "0" ] || [ "$new_database" != "1" ]; then
+                echo "unexpected database-name state"
+                exit 1
+              fi
+
+              old_role=$(psql -Atqc "SELECT count(*) FROM pg_roles WHERE rolname = 'tinyauth'")
+              new_role=$(psql -Atqc "SELECT count(*) FROM pg_roles WHERE rolname = 'issuary'")
+              if [ "$old_role" = "1" ] && [ "$new_role" = "0" ]; then
+                psql -v ON_ERROR_STOP=1 -c 'ALTER ROLE tinyauth RENAME TO issuary'
+              elif [ "$old_role" != "0" ] || [ "$new_role" != "1" ]; then
+                echo "unexpected role-name state"
+                exit 1
+              fi
+
+              psql -v ON_ERROR_STOP=1 -d issuary -Atqc \
+                "SELECT current_database(), current_user, pg_get_userbyid(datdba) FROM pg_database WHERE datname = 'issuary'"
+          env:
+            - name: PGHOST
+              value: issuary-database-cluster-rw.issuary-system.svc.cluster.local
+            - name: PGPORT
+              value: "5432"
+            - name: PGDATABASE
+              value: postgres
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: issuary-database-superuser-secret
+                  key: username
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: issuary-database-superuser-secret
+                  key: password

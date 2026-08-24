@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: issuary-service
+  namespace: issuary-system
+spec:
+  selector:
+    app: issuary
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
