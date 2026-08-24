@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: issuary-ingress
+  namespace: issuary-system
+  annotations:
+    ingress.kubernetes.io/force-ssl-redirect: "true"
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: auth.tinyrack.net
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: issuary-service
+                port:
+                  name: http
+
+  tls:
+    - hosts:
+        - "auth.tinyrack.net"
+      secretName: letsencrypt-cert
