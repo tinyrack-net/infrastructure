@@ -30,7 +30,7 @@ metadata:
     cnpg.io/skipEmptyWalArchiveCheck: "enabled"
 spec:
   instances: 1
-  imageName: ghcr.io/cloudnative-pg/postgresql:15-bookworm
+  imageName: ghcr.io/cloudnative-pg/postgresql:18-standard-bookworm
   storage:
     pvcTemplate:
       accessModes:
@@ -47,6 +47,7 @@ spec:
       isWALArchiver: true
       parameters:
         barmanObjectName: discourse-database-15-backup-store
+        serverName: discourse-database-15-cluster-pg18
   externalClusters:
     - name: discourse-database-15
       plugin:
