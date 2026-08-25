@@ -6,6 +6,7 @@ metadata:
 spec:
   retentionPolicy: 30d
   configuration:
+    serverName: memos-database-cluster-pg18
     destinationPath: s3://tinyrack-prod/apps/memos/database
     endpointURL: https://fsn1.your-objectstorage.com
     s3Credentials:
@@ -30,7 +31,7 @@ metadata:
     cnpg.io/skipEmptyWalArchiveCheck: "enabled"
 spec:
   instances: 1
-  imageName: ghcr.io/cloudnative-pg/postgresql:17-bookworm
+  imageName: ghcr.io/cloudnative-pg/postgresql:18-standard-bookworm
   storage:
     pvcTemplate:
       accessModes:
