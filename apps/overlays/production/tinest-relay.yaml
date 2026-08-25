@@ -1,11 +1,11 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: coder-relay-deployment
+  name: tinest-relay-deployment
   namespace: flux-system
 spec:
   interval: 30m0s
-  path: ./apps/overlays/production/coder-relay/deployment
+  path: ./apps/overlays/production/tinest-relay/deployment
   prune: true
   retryInterval: 2m0s
   sourceRef:

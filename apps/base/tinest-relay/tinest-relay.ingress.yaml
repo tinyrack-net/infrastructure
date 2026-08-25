@@ -1,8 +1,8 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: coder-relay
-  namespace: coder-relay-system
+  name: tinest-relay
+  namespace: tinest-relay-system
   annotations:
     ingress.kubernetes.io/force-ssl-redirect: "true"
 spec:
@@ -15,21 +15,21 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: coder-relay
+                name: tinest-relay
                 port:
                   name: http
           - path: /health/live
             pathType: Exact
             backend:
               service:
-                name: coder-relay
+                name: tinest-relay
                 port:
                   name: http
           - path: /health/ready
             pathType: Exact
             backend:
               service:
-                name: coder-relay
+                name: tinest-relay
                 port:
                   name: http
   tls:
