@@ -17,7 +17,7 @@ spec:
           restartPolicy: Never
           containers:
             - name: reaper
-              image: alpine/k8s:1.36.2
+              image: alpine/k8s:1.36.3
               imagePullPolicy: IfNotPresent
               env:
                 - name: STALE_RUNNING_HOURS
