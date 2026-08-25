@@ -26,11 +26,9 @@ kind: Cluster
 metadata:
   name: issuary-database-cluster
   namespace: issuary-system
-  annotations:
-    cnpg.io/hibernation: "on"
 spec:
   instances: 1
-  imageName: ghcr.io/cloudnative-pg/postgresql:17-bookworm
+  imageName: ghcr.io/cloudnative-pg/postgresql:18-standard-bookworm
   postgresql:
     parameters:
       max_connections: "500"
@@ -51,6 +49,7 @@ spec:
       isWALArchiver: true
       parameters:
         barmanObjectName: issuary-database-backup-store
+        serverName: issuary-database-cluster-pg18
 
   externalClusters:
     - name: issuary-source
