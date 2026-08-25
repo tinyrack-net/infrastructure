@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: coder-relay
-  namespace: coder-relay-system
+  name: tinest-relay
+  namespace: tinest-relay-system
 spec:
   replicas: 1
   strategy:
     type: Recreate
   selector:
     matchLabels:
-      app: coder-relay
+      app: tinest-relay
   template:
     metadata:
       labels:
-        app: coder-relay
+        app: tinest-relay
     spec:
       terminationGracePeriodSeconds: 35
       containers:
-        - name: coder-relay
-          image: ghcr.io/tinyrack-net/tinest-relay:v0.6.0 # {"$imagepolicy": "flux-system:coder-relay"}
+        - name: tinest-relay
+          image: ghcr.io/tinyrack-net/tinest-relay:v0.6.0 # {"$imagepolicy": "flux-system:tinest-relay"}
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
