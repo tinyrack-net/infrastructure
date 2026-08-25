@@ -28,6 +28,7 @@ metadata:
   name: issuary
   namespace: flux-system
 spec:
+  suspend: true
   interval: 10m
   sourceRef:
     kind: GitRepository
