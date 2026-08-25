@@ -34,7 +34,7 @@ spec:
           args:
             - --token
             - "$(CLOUDFLARED_TOKEN)"
-          image: cloudflare/cloudflared:2026.7.3
+          image: cloudflare/cloudflared:2026.8.2
           name: cloudflared
           env:
             - name: CLOUDFLARED_TOKEN
