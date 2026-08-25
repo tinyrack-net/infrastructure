@@ -11,13 +11,13 @@ spec:
   template:
     metadata:
       annotations:
-        issuary.tinyrack.net/config-revision: migration-20260825
+        issuary.tinyrack.net/config-revision: retire-v1-20260825
       labels:
         app: issuary
     spec:
       containers:
         - name: issuary
-          image: ghcr.io/tinyrack-net/issuary:0.21.1 # {"$imagepolicy": "flux-system:issuary"}
+          image: ghcr.io/tinyrack-net/issuary:0.22.0 # {"$imagepolicy": "flux-system:issuary"}
           imagePullPolicy: IfNotPresent
           command:
             - node
