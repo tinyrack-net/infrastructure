@@ -4,7 +4,7 @@ metadata:
   name: memos
   namespace: memos-system
 spec:
-  replicas: 0
+  replicas: 2
   selector:
     matchLabels:
       app: memos
