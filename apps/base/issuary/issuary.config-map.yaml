@@ -43,6 +43,7 @@ data:
     security:
       session_secret: ${ISSUARY_SESSION_SECRET}
       hash_secret: ${ISSUARY_HASH_SECRET}
+      retire_legacy_v1_credentials: true
 
     email:
       transport: smtp
