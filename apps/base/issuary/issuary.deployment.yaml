@@ -11,7 +11,7 @@ spec:
   template:
     metadata:
       annotations:
-        issuary.tinyrack.net/config-revision: remove-v1-20260825
+        issuary.tinyrack.net/config-revision: branding-v2-20260827
       labels:
         app: issuary
     spec:

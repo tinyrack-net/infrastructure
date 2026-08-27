@@ -18,15 +18,10 @@ data:
         APP_NAME: 타이니랙
 
     branding:
-      background_url: https://images.pexels.com/photos/5912576/pexels-photo-5912576.jpeg?auto=compress&cs=tinysrgb&w=1920
       title:
         ko: 타이니랙
         en: Tinyrack
         ja: タイニーラック
-      subtitle:
-        ko: 타이니랙에 오신 것을 환영합니다
-        en: Welcome to Tinyrack
-        ja: タイニーラックへようこそ
 
     logging:
       level: info
