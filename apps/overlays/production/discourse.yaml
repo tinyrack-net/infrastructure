@@ -5,7 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 30m0s
-  path: ./apps/overlays/production/discourse/deployment
+  path: ./apps/base/discourse
   prune: true
   retryInterval: 2m0s
   sourceRef:
