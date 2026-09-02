@@ -1,0 +1,28 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: longhorn-backup-reaper
+rules:
+  - apiGroups:
+      - longhorn.io
+    resources:
+      - backups
+      - systembackups
+      - volumes
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - longhorn.io
+    resources:
+      - backups
+      - systembackups
+    verbs:
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - persistentvolumeclaims
+    verbs:
+      - get
+      - list

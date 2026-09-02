@@ -4,3 +4,7 @@ resources:
   - longhorn.system-backup.yaml
   - longhorn.volume-backup.yaml
   - longhorn.clean-up.yaml
+  - longhorn.backup-reaper.serviceaccount.yaml
+  - longhorn.backup-reaper.clusterrole.yaml
+  - longhorn.backup-reaper.clusterrolebinding.yaml
+  - longhorn.backup-reaper.cronjob.yaml

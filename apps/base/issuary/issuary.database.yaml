@@ -52,12 +52,12 @@ spec:
         serverName: issuary-database-cluster-pg18
 
   externalClusters:
-    - name: issuary-source
+    - name: issuary-pg18-source
       plugin:
         name: barman-cloud.cloudnative-pg.io
         parameters:
           barmanObjectName: issuary-database-backup-store
-          serverName: issuary-database-cluster
+          serverName: issuary-database-cluster-pg18
 
   enableSuperuserAccess: true
   superuserSecret:
@@ -65,7 +65,7 @@ spec:
 
   bootstrap:
     recovery:
-      source: issuary-source
+      source: issuary-pg18-source
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: ScheduledBackup
