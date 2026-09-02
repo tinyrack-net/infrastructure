@@ -17,7 +17,7 @@ spec:
   variables:
     - name: cleanupEnabled
       expression: >-
-        resource.Get("v1", "configmaps", "kyverno", "backup-cleanup-control")
+        globalContext.Get("backup-cleanup-control", "")
           .data[?'enabled'].orValue('false') == 'true'
     - name: protected
       expression: >-
@@ -34,19 +34,19 @@ spec:
           ? timestamp(object.status.snapshotCreatedAt)
           : timestamp(object.metadata.creationTimestamp)
     - name: persistentVolumeClaims
-      expression: resource.List("v1", "persistentvolumeclaims", "").items
+      expression: globalContext.Get("backup-cleanup-pvcs", "")
     - name: longhornVolumes
-      expression: resource.List("longhorn.io/v1beta2", "volumes", "longhorn-system").items
+      expression: globalContext.Get("backup-cleanup-longhorn-volumes", "")
     - name: isCnpgVolume
       expression: >-
-        variables.persistentVolumeClaims.orValue([]).exists(pvc,
+        variables.persistentVolumeClaims.exists(pvc,
           has(pvc.metadata.labels) &&
           'cnpg.io/cluster' in pvc.metadata.labels &&
           has(pvc.spec.volumeName) &&
           pvc.spec.volumeName == variables.volumeName)
     - name: isSelectedVolume
       expression: >-
-        variables.longhornVolumes.orValue([]).exists(volume,
+        variables.longhornVolumes.exists(volume,
           volume.metadata.name == variables.volumeName &&
           has(volume.metadata.labels) &&
           (volume.metadata.labels[?'recurring-job-group.longhorn.io/longhorn-backup'].orValue('') == 'enabled' ||

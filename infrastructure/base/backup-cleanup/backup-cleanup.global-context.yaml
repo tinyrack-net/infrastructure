@@ -1,0 +1,40 @@
+apiVersion: kyverno.io/v2
+kind: GlobalContextEntry
+metadata:
+  name: backup-cleanup-control
+spec:
+  apiCall:
+    urlPath: /api/v1/namespaces/kyverno/configmaps/backup-cleanup-control
+    refreshInterval: 1m
+---
+apiVersion: kyverno.io/v2
+kind: GlobalContextEntry
+metadata:
+  name: backup-cleanup-pvcs
+spec:
+  kubernetesResource:
+    group: ""
+    version: v1
+    resource: persistentvolumeclaims
+---
+apiVersion: kyverno.io/v2
+kind: GlobalContextEntry
+metadata:
+  name: backup-cleanup-longhorn-volumes
+spec:
+  kubernetesResource:
+    group: longhorn.io
+    version: v1beta2
+    resource: volumes
+    namespace: longhorn-system
+---
+apiVersion: kyverno.io/v2
+kind: GlobalContextEntry
+metadata:
+  name: backup-cleanup-system-backups
+spec:
+  kubernetesResource:
+    group: longhorn.io
+    version: v1beta2
+    resource: systembackups
+    namespace: longhorn-system

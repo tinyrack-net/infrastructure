@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - backup-cleanup.configmap.yaml
   - backup-cleanup.clusterrole.yaml
+  - backup-cleanup.global-context.yaml
   - cnpg-backup.deleting-policy.yaml
   - longhorn-backup.deleting-policy.yaml
   - longhorn-system-backup.deleting-policy.yaml
