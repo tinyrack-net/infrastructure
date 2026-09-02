@@ -16,7 +16,7 @@ spec:
   variables:
     - name: cleanupEnabled
       expression: >-
-        resource.Get("v1", "configmaps", "kyverno", "backup-cleanup-control")
+        globalContext.Get("backup-cleanup-control", "")
           .data[?'enabled'].orValue('false') == 'true'
     - name: protected
       expression: >-

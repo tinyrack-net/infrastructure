@@ -17,7 +17,7 @@ spec:
   variables:
     - name: cleanupEnabled
       expression: >-
-        resource.Get("v1", "configmaps", "kyverno", "backup-cleanup-control")
+        globalContext.Get("backup-cleanup-control", "")
           .data[?'enabled'].orValue('false') == 'true'
     - name: protected
       expression: >-
@@ -36,10 +36,10 @@ spec:
     - name: createdAt
       expression: timestamp(object.metadata.creationTimestamp)
     - name: systemBackups
-      expression: resource.List("longhorn.io/v1beta2", "systembackups", "longhorn-system").items
+      expression: globalContext.Get("backup-cleanup-system-backups", "")
     - name: newerManagedReadyCount
       expression: >-
-        variables.systemBackups.orValue([]).filter(backup,
+        variables.systemBackups.filter(backup,
           backup.metadata.?labels.orValue({})
             [?'recurring-job.longhorn.io/system-backup'].orValue('') == 'longhorn-system-backup' &&
           backup.?status.orValue({})[?'state'].orValue('') == 'Ready' &&
