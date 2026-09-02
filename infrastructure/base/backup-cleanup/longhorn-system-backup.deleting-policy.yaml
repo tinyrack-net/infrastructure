@@ -4,7 +4,7 @@ metadata:
   name: longhorn-system-backup-cleanup
   namespace: longhorn-system
 spec:
-  schedule: "17 21 * * 6"
+  schedule: "*/10 * * * *"
   matchConstraints:
     resourceRules:
       - apiGroups:

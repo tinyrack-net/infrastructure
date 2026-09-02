@@ -4,4 +4,4 @@ metadata:
   name: backup-cleanup-control
   namespace: kyverno
 data:
-  enabled: "false"
+  enabled: "true"
