@@ -25,7 +25,7 @@ spec:
               imagePullPolicy: IfNotPresent
               env:
                 - name: DRY_RUN
-                  value: "true"
+                  value: "false"
                 - name: MODE
                   value: weekly
                 - name: CNPG_GRACE_DAYS
