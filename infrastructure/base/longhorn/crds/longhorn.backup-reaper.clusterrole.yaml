@@ -6,8 +6,6 @@ rules:
   - apiGroups:
       - longhorn.io
     resources:
-      - backups
-      - systembackups
       - volumes
     verbs:
       - get
@@ -18,6 +16,9 @@ rules:
       - backups
       - systembackups
     verbs:
+      - get
+      - list
+      - watch
       - delete
   - apiGroups:
       - ""
