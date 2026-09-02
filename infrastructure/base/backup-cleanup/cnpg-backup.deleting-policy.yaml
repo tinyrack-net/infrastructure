@@ -1,0 +1,48 @@
+apiVersion: policies.kyverno.io/v1
+kind: DeletingPolicy
+metadata:
+  name: cnpg-backup-cleanup
+spec:
+  schedule: "17 * * * *"
+  matchConstraints:
+    resourceRules:
+      - apiGroups:
+          - postgresql.cnpg.io
+        apiVersions:
+          - v1
+        resources:
+          - backups
+        scope: Namespaced
+  variables:
+    - name: cleanupEnabled
+      expression: >-
+        resource.Get("v1", "configmaps", "kyverno", "backup-cleanup-control")
+          .data[?'enabled'].orValue('false') == 'true'
+    - name: protected
+      expression: >-
+        object.metadata.?labels.orValue({})
+          [?'tinyrack.net/protected'].orValue('false') == 'true'
+    - name: phase
+      expression: object.?status.orValue({})[?'phase'].orValue('')
+    - name: createdAt
+      expression: timestamp(object.metadata.creationTimestamp)
+    - name: runningSince
+      expression: >-
+        has(object.status) && has(object.status.startedAt) && object.status.startedAt != ''
+          ? timestamp(object.status.startedAt)
+          : variables.createdAt
+  conditions:
+    - name: cleanup-enabled
+      expression: variables.cleanupEnabled
+    - name: not-protected
+      expression: '!variables.protected'
+    - name: retention-expired
+      expression: >-
+        (variables.phase == 'running' &&
+          time.now() - variables.runningSince >= duration('24h')) ||
+        (variables.phase == '' &&
+          time.now() - variables.createdAt >= duration('12h')) ||
+        (variables.phase == 'completed' &&
+          time.now() - variables.createdAt >= duration('720h')) ||
+        (variables.phase == 'failed' &&
+          time.now() - variables.createdAt >= duration('336h'))

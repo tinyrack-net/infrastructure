@@ -1,0 +1,61 @@
+apiVersion: policies.kyverno.io/v1
+kind: NamespacedDeletingPolicy
+metadata:
+  name: longhorn-system-backup-cleanup
+  namespace: longhorn-system
+spec:
+  schedule: "17 21 * * 6"
+  matchConstraints:
+    resourceRules:
+      - apiGroups:
+          - longhorn.io
+        apiVersions:
+          - v1beta2
+        resources:
+          - systembackups
+        scope: Namespaced
+  variables:
+    - name: cleanupEnabled
+      expression: >-
+        resource.Get("v1", "configmaps", "kyverno", "backup-cleanup-control")
+          .data[?'enabled'].orValue('false') == 'true'
+    - name: protected
+      expression: >-
+        object.metadata.?labels.orValue({})
+          [?'tinyrack.net/protected'].orValue('false') == 'true'
+    - name: managed
+      expression: >-
+        object.metadata.?labels.orValue({})
+          [?'recurring-job.longhorn.io/system-backup'].orValue('') == 'longhorn-system-backup'
+    - name: state
+      expression: object.?status.orValue({})[?'state'].orValue('')
+    - name: ready
+      expression: variables.state == 'Ready'
+    - name: error
+      expression: variables.state == 'Error'
+    - name: createdAt
+      expression: timestamp(object.metadata.creationTimestamp)
+    - name: systemBackups
+      expression: resource.List("longhorn.io/v1beta2", "systembackups", "longhorn-system").items
+    - name: newerManagedReadyCount
+      expression: >-
+        variables.systemBackups.orValue([]).filter(backup,
+          backup.metadata.?labels.orValue({})
+            [?'recurring-job.longhorn.io/system-backup'].orValue('') == 'longhorn-system-backup' &&
+          backup.?status.orValue({})[?'state'].orValue('') == 'Ready' &&
+          (timestamp(backup.metadata.creationTimestamp) > variables.createdAt ||
+           (timestamp(backup.metadata.creationTimestamp) == variables.createdAt &&
+            backup.metadata.name > object.metadata.name))).size()
+  conditions:
+    - name: cleanup-enabled
+      expression: variables.cleanupEnabled
+    - name: not-protected
+      expression: '!variables.protected'
+    - name: retention-expired
+      expression: >-
+        (variables.error &&
+          time.now() - variables.createdAt >= duration('168h')) ||
+        (variables.managed && variables.ready &&
+          variables.newerManagedReadyCount >= 14) ||
+        (!(variables.managed && variables.ready) &&
+          time.now() - variables.createdAt >= duration('720h'))

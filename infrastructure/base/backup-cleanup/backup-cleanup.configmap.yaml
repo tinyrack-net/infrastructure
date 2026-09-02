@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backup-cleanup-control
+  namespace: kyverno
+data:
+  enabled: "false"
