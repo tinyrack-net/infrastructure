@@ -15,4 +15,5 @@ resources:
   - longhorn.yaml
   - mariadb-operator.yaml
   - cloudnative-pg.yaml
+  - backup-cleanup.yaml
   - ot-redis-operator.yaml

@@ -1,0 +1,69 @@
+apiVersion: policies.kyverno.io/v1
+kind: NamespacedDeletingPolicy
+metadata:
+  name: longhorn-volume-backup-cleanup
+  namespace: longhorn-system
+spec:
+  schedule: "17 21 * * 6"
+  matchConstraints:
+    resourceRules:
+      - apiGroups:
+          - longhorn.io
+        apiVersions:
+          - v1beta2
+        resources:
+          - backups
+        scope: Namespaced
+  variables:
+    - name: cleanupEnabled
+      expression: >-
+        resource.Get("v1", "configmaps", "kyverno", "backup-cleanup-control")
+          .data[?'enabled'].orValue('false') == 'true'
+    - name: protected
+      expression: >-
+        object.spec.?labels.orValue({})
+          [?'tinyrack.net/protected'].orValue('false') == 'true'
+    - name: volumeName
+      expression: >-
+        has(object.status) && has(object.status.volumeName) && object.status.volumeName != ''
+          ? string(object.status.volumeName)
+          : object.spec.?volumeName.orValue('')
+    - name: createdAt
+      expression: >-
+        has(object.status) && has(object.status.snapshotCreatedAt) && object.status.snapshotCreatedAt != ''
+          ? timestamp(object.status.snapshotCreatedAt)
+          : timestamp(object.metadata.creationTimestamp)
+    - name: persistentVolumeClaims
+      expression: resource.List("v1", "persistentvolumeclaims", "").items
+    - name: longhornVolumes
+      expression: resource.List("longhorn.io/v1beta2", "volumes", "longhorn-system").items
+    - name: isCnpgVolume
+      expression: >-
+        variables.persistentVolumeClaims.orValue([]).exists(pvc,
+          has(pvc.metadata.labels) &&
+          'cnpg.io/cluster' in pvc.metadata.labels &&
+          has(pvc.spec.volumeName) &&
+          pvc.spec.volumeName == variables.volumeName)
+    - name: isSelectedVolume
+      expression: >-
+        variables.longhornVolumes.orValue([]).exists(volume,
+          volume.metadata.name == variables.volumeName &&
+          has(volume.metadata.labels) &&
+          (volume.metadata.labels[?'recurring-job-group.longhorn.io/longhorn-backup'].orValue('') == 'enabled' ||
+           volume.metadata.labels[?'recurring-job.longhorn.io/longhorn-volume-backup'].orValue('') == 'enabled'))
+    - name: recurringJob
+      expression: object.spec.?labels.orValue({})[?'RecurringJob'].orValue('')
+    - name: isManaged
+      expression: >-
+        variables.isSelectedVolume && variables.recurringJob == 'longhorn-volume-backup'
+  conditions:
+    - name: cleanup-enabled
+      expression: variables.cleanupEnabled
+    - name: not-protected
+      expression: '!variables.protected'
+    - name: retention-expired
+      expression: >-
+        (variables.isCnpgVolume &&
+          time.now() - variables.createdAt >= duration('168h')) ||
+        (!variables.isManaged &&
+          time.now() - variables.createdAt >= duration('720h'))
