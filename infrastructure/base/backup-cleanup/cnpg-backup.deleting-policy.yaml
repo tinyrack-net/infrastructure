@@ -3,7 +3,7 @@ kind: DeletingPolicy
 metadata:
   name: cnpg-backup-cleanup
 spec:
-  schedule: "*/10 * * * *"
+  schedule: "17 * * * *"
   matchConstraints:
     resourceRules:
       - apiGroups:
