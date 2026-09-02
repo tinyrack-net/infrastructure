@@ -1,0 +1,30 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kyverno-release
+  namespace: kyverno
+spec:
+  chart:
+    spec:
+      chart: kyverno
+      version: "3.9.0"
+      sourceRef:
+        kind: HelmRepository
+        name: kyverno
+        namespace: flux-system
+  install:
+    crds: CreateReplace
+  upgrade:
+    crds: CreateReplace
+  interval: 5m
+  timeout: 10m
+  releaseName: kyverno
+  values:
+    admissionController:
+      replicas: 1
+    backgroundController:
+      enabled: false
+    cleanupController:
+      replicas: 1
+    reportsController:
+      enabled: false
