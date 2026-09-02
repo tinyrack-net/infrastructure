@@ -5,19 +5,22 @@ metadata:
   namespace: cnpg-system
 spec:
   schedule: "17 * * * *"
+  startingDeadlineSeconds: 900
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 1
   jobTemplate:
     spec:
       backoffLimit: 1
+      activeDeadlineSeconds: 600
+      ttlSecondsAfterFinished: 86400
       template:
         spec:
           serviceAccountName: cnpg-backup-reaper
           restartPolicy: Never
           containers:
             - name: reaper
-              image: alpine/k8s:1.36.3
+              image: alpine/k8s:1.36.4@sha256:358ddfc2d6ff3f00dd461dbd79aaa6d6738709f225b8da0945bb63bd4dbc304e
               imagePullPolicy: IfNotPresent
               env:
                 - name: STALE_RUNNING_HOURS

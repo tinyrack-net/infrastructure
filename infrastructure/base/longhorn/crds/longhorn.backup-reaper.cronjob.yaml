@@ -1,0 +1,152 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: longhorn-backup-reaper
+  namespace: longhorn-system
+spec:
+  schedule: "17 6 * * 0"
+  timeZone: Asia/Seoul
+  startingDeadlineSeconds: 900
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 3600
+      ttlSecondsAfterFinished: 86400
+      template:
+        spec:
+          serviceAccountName: longhorn-backup-reaper
+          restartPolicy: Never
+          containers:
+            - name: reaper
+              image: alpine/k8s:1.36.4@sha256:358ddfc2d6ff3f00dd461dbd79aaa6d6738709f225b8da0945bb63bd4dbc304e
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: DRY_RUN
+                  value: "true"
+                - name: MODE
+                  value: weekly
+                - name: CNPG_GRACE_DAYS
+                  value: "7"
+                - name: ORPHAN_GRACE_DAYS
+                  value: "30"
+                - name: ERROR_GRACE_DAYS
+                  value: "7"
+                - name: SYSTEM_BACKUP_RETAIN
+                  value: "14"
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -eu
+
+                  namespace="longhorn-system"
+                  protected_label="tinyrack.net/protected"
+                  recurring_job="longhorn-volume-backup"
+                  now="$(date -u +%s)"
+                  failures=0
+                  candidates=0
+                  deleted=0
+
+                  kubectl get volumes.longhorn.io -n "$namespace" -o json > /tmp/volumes.json
+                  kubectl get persistentvolumeclaims -A -o json > /tmp/pvcs.json
+                  kubectl get backups.longhorn.io -n "$namespace" -o json > /tmp/backups.json
+                  kubectl get systembackups.longhorn.io -n "$namespace" -o json > /tmp/systembackups.json
+
+                  desired_volumes="$(jq -c '[.items[] | select(
+                    .metadata.labels["recurring-job-group.longhorn.io/longhorn-backup"] == "enabled" or
+                    .metadata.labels["recurring-job.longhorn.io/longhorn-volume-backup"] == "enabled"
+                  ) | .metadata.name]' /tmp/volumes.json)"
+                  live_volumes="$(jq -c '[.items[].metadata.name]' /tmp/volumes.json)"
+                  cnpg_volumes="$(jq -c '[.items[] | select(.metadata.labels["cnpg.io/cluster"] != null) | .spec.volumeName | select(. != null)] | unique' /tmp/pvcs.json)"
+
+                  delete_resource() {
+                    kind="$1"
+                    name="$2"
+                    reason="$3"
+                    candidates="$((candidates + 1))"
+                    echo "action=candidate kind=$kind name=$name reason=$reason dry_run=$DRY_RUN mode=$MODE"
+                    if [ "$DRY_RUN" = "true" ]; then
+                      return
+                    fi
+                    if kubectl delete "$kind" -n "$namespace" "$name" --wait=false; then
+                      deleted="$((deleted + 1))"
+                    else
+                      failures="$((failures + 1))"
+                    fi
+                    if [ "$((deleted % 100))" -eq 0 ] && [ "$deleted" -gt 0 ]; then
+                      sleep 5
+                    fi
+                  }
+
+                  jq -r \
+                    --argjson now "$now" \
+                    --argjson desired "$desired_volumes" \
+                    --argjson live "$live_volumes" \
+                    --argjson cnpg "$cnpg_volumes" \
+                    --arg protected "$protected_label" \
+                    --arg recurringJob "$recurring_job" \
+                    --arg mode "$MODE" \
+                    --argjson cnpgGrace "$((CNPG_GRACE_DAYS * 86400))" \
+                    --argjson orphanGrace "$((ORPHAN_GRACE_DAYS * 86400))" '
+                    .items[]
+                    | {
+                        name: .metadata.name,
+                        volume: (.status.volumeName // .spec.volumeName // ""),
+                        protected: ((.spec.labels[$protected] // "false") == "true"),
+                        recurringJob: (.spec.labels.RecurringJob // .status.labels.RecurringJob // ""),
+                        created: (((.status.snapshotCreatedAt // "") as $created
+                          | if $created == "" then .metadata.creationTimestamp else $created end) | fromdateiso8601)
+                      }
+                    | .volume as $volume
+                    | .isDesired = ($desired | index($volume) != null)
+                    | .isLive = ($live | index($volume) != null)
+                    | .isCnpg = ($cnpg | index($volume) != null)
+                    | .isManaged = (.isDesired and .recurringJob == $recurringJob)
+                    | if .protected or .isManaged then empty
+                      elif $mode == "converge" then [.name, "converge-unmanaged"] | @tsv
+                      elif .isCnpg and ($now - .created >= $cnpgGrace) then [.name, "cnpg-grace-expired"] | @tsv
+                      elif ($now - .created >= $orphanGrace) then
+                        [.name, (if .isLive then "unmanaged-grace-expired" else "orphan-grace-expired" end)] | @tsv
+                      else empty end
+                  ' /tmp/backups.json > /tmp/backup-candidates.tsv
+
+                  while IFS="$(printf '\t')" read -r name reason; do
+                    [ -n "$name" ] || continue
+                    delete_resource backups.longhorn.io "$name" "$reason"
+                  done < /tmp/backup-candidates.tsv
+
+                  jq -r \
+                    --argjson now "$now" \
+                    --arg protected "$protected_label" \
+                    --arg mode "$MODE" \
+                    --argjson retain "$SYSTEM_BACKUP_RETAIN" \
+                    --argjson errorGrace "$((ERROR_GRACE_DAYS * 86400))" \
+                    --argjson orphanGrace "$((ORPHAN_GRACE_DAYS * 86400))" '
+                    [.items[] | {
+                      name: .metadata.name,
+                      protected: ((.metadata.labels[$protected] // "false") == "true"),
+                      managed: (.metadata.labels["recurring-job.longhorn.io/system-backup"] == "longhorn-system-backup"),
+                      ready: (.status.state == "Ready"),
+                      error: (.status.state == "Error"),
+                      created: (.metadata.creationTimestamp | fromdateiso8601)
+                    }]
+                    | (map(select(.managed and .ready)) | sort_by(.created) | reverse | .[:$retain] | map(.name)) as $kept
+                    | .[]
+                    | .name as $name
+                    | if .protected or ($kept | index($name) != null) then empty
+                      elif $mode == "converge" then [.name, "converge-expired"] | @tsv
+                      elif .error and ($now - .created >= $errorGrace) then [.name, "error-grace-expired"] | @tsv
+                      elif ($now - .created >= $orphanGrace) then [.name, "system-grace-expired"] | @tsv
+                      else empty end
+                  ' /tmp/systembackups.json > /tmp/systembackup-candidates.tsv
+
+                  while IFS="$(printf '\t')" read -r name reason; do
+                    [ -n "$name" ] || continue
+                    delete_resource systembackups.longhorn.io "$name" "$reason"
+                  done < /tmp/systembackup-candidates.tsv
+
+                  echo "action=summary candidates=$candidates deleted=$deleted failures=$failures dry_run=$DRY_RUN mode=$MODE desired_volumes=$(echo "$desired_volumes" | jq -c .) cnpg_volumes=$(echo "$cnpg_volumes" | jq -c .)"
+                  [ "$failures" -eq 0 ]

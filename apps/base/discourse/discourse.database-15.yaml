@@ -49,12 +49,12 @@ spec:
         barmanObjectName: discourse-database-15-backup-store
         serverName: discourse-database-15-cluster-pg18
   externalClusters:
-    - name: discourse-database-15
+    - name: discourse-database-15-pg18-source
       plugin:
         name: barman-cloud.cloudnative-pg.io
         parameters:
           barmanObjectName: discourse-database-15-backup-store
-          serverName: discourse-database-15
+          serverName: discourse-database-15-cluster-pg18
 
   enableSuperuserAccess: true
   superuserSecret:
@@ -63,7 +63,7 @@ spec:
   # 신규 클러스터 프로비저닝 시 주석 처리
   bootstrap:
     recovery:
-      source: discourse-database-15
+      source: discourse-database-15-pg18-source
 
   # bootstrap:
   #   initdb:
