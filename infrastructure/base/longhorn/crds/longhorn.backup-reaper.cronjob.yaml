@@ -36,6 +36,10 @@ spec:
                   value: "7"
                 - name: SYSTEM_BACKUP_RETAIN
                   value: "14"
+                - name: MAX_DELETIONS
+                  value: "100"
+                - name: MAX_IN_FLIGHT
+                  value: "10"
               command:
                 - /bin/sh
                 - -c
@@ -49,6 +53,21 @@ spec:
                   failures=0
                   candidates=0
                   deleted=0
+
+                  inflight_deletions() {
+                    backup_inflight="$(kubectl get backups.longhorn.io -n "$namespace" -o json \
+                      | jq '[.items[] | select(.metadata.deletionTimestamp != null)] | length')"
+                    system_inflight="$(kubectl get systembackups.longhorn.io -n "$namespace" -o json \
+                      | jq '[.items[] | select(.metadata.deletionTimestamp != null)] | length')"
+                    echo "$((backup_inflight + system_inflight))"
+                  }
+
+                  wait_for_delete_capacity() {
+                    while [ "$(inflight_deletions)" -ge "$MAX_IN_FLIGHT" ]; do
+                      echo "action=throttle in_flight=$(inflight_deletions) max_in_flight=$MAX_IN_FLIGHT"
+                      sleep 15
+                    done
+                  }
 
                   kubectl get volumes.longhorn.io -n "$namespace" -o json > /tmp/volumes.json
                   kubectl get persistentvolumeclaims -A -o json > /tmp/pvcs.json
@@ -71,13 +90,20 @@ spec:
                     if [ "$DRY_RUN" = "true" ]; then
                       return
                     fi
+                    if [ "$deleted" -ge "$MAX_DELETIONS" ]; then
+                      return
+                    fi
+                    wait_for_delete_capacity
                     if kubectl delete "$kind" -n "$namespace" "$name" --wait=false; then
                       deleted="$((deleted + 1))"
                     else
                       failures="$((failures + 1))"
                     fi
-                    if [ "$((deleted % 100))" -eq 0 ] && [ "$deleted" -gt 0 ]; then
-                      sleep 5
+                    if [ "$((deleted % MAX_IN_FLIGHT))" -eq 0 ] && [ "$deleted" -gt 0 ]; then
+                      while [ "$(inflight_deletions)" -gt 0 ]; do
+                        echo "action=drain in_flight=$(inflight_deletions)"
+                        sleep 15
+                      done
                     fi
                   }
 
