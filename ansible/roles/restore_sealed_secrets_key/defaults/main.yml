@@ -1,0 +1,6 @@
+---
+restore_sealed_secrets_key_namespace: sealed-secrets
+restore_sealed_secrets_key_secret_name: tinyrack-production-key
+restore_sealed_secrets_key_ready_timeout: 300s
+restore_sealed_secrets_key_tls_crt_path: "{{ playbook_dir }}/../../tinyrack-production-key.crt"
+restore_sealed_secrets_key_tls_key: "{{ vault_sealed_secrets_tls_key }}"

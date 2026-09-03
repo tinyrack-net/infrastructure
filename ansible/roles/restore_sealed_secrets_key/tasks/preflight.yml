@@ -1,0 +1,58 @@
+---
+- name: Require the Sealed Secrets TLS material
+  ansible.builtin.assert:
+    that:
+      - restore_sealed_secrets_key_tls_key is defined
+      - restore_sealed_secrets_key_tls_key != "CHANGE_ME"
+      - "'BEGIN' in restore_sealed_secrets_key_tls_key"
+      - "'PRIVATE KEY' in restore_sealed_secrets_key_tls_key"
+    fail_msg: Run `make vault-edit` and add the Sealed Secrets TLS private key.
+
+- name: Inspect the committed Sealed Secrets certificate
+  ansible.builtin.stat:
+    path: "{{ restore_sealed_secrets_key_tls_crt_path }}"
+  delegate_to: localhost
+  become: false
+  run_once: true
+  register: restore_sealed_secrets_key_certificate_file
+
+- name: Require the committed Sealed Secrets certificate
+  ansible.builtin.assert:
+    that:
+      - restore_sealed_secrets_key_certificate_file.stat.exists
+      - restore_sealed_secrets_key_certificate_file.stat.isreg
+    fail_msg: The committed tinyrack-production-key.crt file is missing.
+  run_once: true
+
+- name: Read the public key from the Sealed Secrets certificate
+  ansible.builtin.command:
+    argv: [openssl, x509, -pubkey, -noout]
+    stdin: >-
+      {{ lookup('ansible.builtin.file', restore_sealed_secrets_key_tls_crt_path, rstrip=false) }}
+  delegate_to: localhost
+  become: false
+  run_once: true
+  register: restore_sealed_secrets_key_certificate_public_key
+  changed_when: false
+  check_mode: false
+  no_log: true
+
+- name: Read the public key from the Sealed Secrets private key
+  ansible.builtin.command:
+    argv: [openssl, pkey, -pubout]
+    stdin: "{{ restore_sealed_secrets_key_tls_key }}"
+  delegate_to: localhost
+  become: false
+  run_once: true
+  register: restore_sealed_secrets_key_private_public_key
+  changed_when: false
+  check_mode: false
+  no_log: true
+
+- name: Verify the Sealed Secrets certificate and private key match
+  ansible.builtin.assert:
+    that:
+      - restore_sealed_secrets_key_certificate_public_key.stdout == restore_sealed_secrets_key_private_public_key.stdout
+    fail_msg: The Sealed Secrets certificate and private key do not match.
+  run_once: true
+  no_log: true

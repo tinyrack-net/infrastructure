@@ -72,6 +72,25 @@ flowchart TB
 
 # 설치
 
+## Ansible 준비
+
+`ansible/`은 `tinyrack-server` 머신 구성을 관리해요. Vault 비밀번호와 평문 시크릿은 Git에 커밋하지 않아요.
+
+```bash
+cd ansible
+make ping
+make syntax
+make lint
+make preflight
+make check
+make apply
+make verify
+make vault-edit
+```
+
+`make vault-edit`에서 `vault_tinyrack_become_password`와 `vault_sealed_secrets_tls_key`를 실제 값으로 바꿔요.
+Sealed Secrets 키는 `tinyrack-production-key` 하나로 고정하며 controller의 자동 키 갱신은 비활성화해요.
+
 ## Tailscale 설정
 
 ```bash
@@ -108,10 +127,9 @@ sh -s - server \
 인프라를 복원하기 전에, 인프라의 암호화된 시크릿을 클러스터가 복호화할 수 있도록 키 등록이 먼저 필요해요.
 
 ```bash
-# sealed secrets 이 설치될 네임스페이스 생성
-sudo kubectl create namespace sealed-secrets
-# 기존 키 복원
-sudo kubectl -n sealed-secrets apply -f main.key.yaml --force
+cd ansible
+make apply
+make verify
 ```
 
 > 저장소에 등록된 키는 공개키이며, 이 과정에서는 비밀키가 필요해요.

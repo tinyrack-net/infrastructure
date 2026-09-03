@@ -1,0 +1,26 @@
+---
+extends: default
+
+ignore: |
+  .ansible/
+  collections/
+  inventories/production/group_vars/all/vault.yml
+  roles/restore_sealed_secrets_key/templates/
+  roles_galaxy/
+
+rules:
+  braces:
+    max-spaces-inside: 1
+  comments:
+    min-spaces-from-content: 1
+  comments-indentation: false
+  line-length:
+    max: 120
+    level: warning
+  octal-values:
+    forbid-explicit-octal: true
+    forbid-implicit-octal: true
+  truthy:
+    allowed-values:
+      - "true"
+      - "false"
