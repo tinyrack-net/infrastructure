@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - sealed-secrets.namespace.yaml
   - sealed-secrets.helm-release.yaml
+  - sealed-secrets.cilium-network-policy.yaml

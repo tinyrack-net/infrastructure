@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - ot-redis-operator.namespace.yaml
   - ot-redis-operator.helm-release.yaml
+  - ot-redis-operator.cilium-network-policy.yaml

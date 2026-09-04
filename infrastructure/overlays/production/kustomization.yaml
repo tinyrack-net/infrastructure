@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - repositories.yaml
   - cilium.yaml
+  - network-security.yaml
   - kyverno.yaml
   - system-upgrade-controller.yaml
   - k3s-upgrade-plan.yaml

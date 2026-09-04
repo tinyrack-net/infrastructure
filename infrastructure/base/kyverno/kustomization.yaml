@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - kyverno.namespace.yaml
   - kyverno.helm-release.yaml
+  - kyverno.cilium-network-policy.yaml

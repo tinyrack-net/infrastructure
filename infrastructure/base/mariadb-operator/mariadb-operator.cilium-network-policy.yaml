@@ -1,0 +1,27 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: platform-mariadb-operator
+  namespace: mariadb-operator-system
+specs:
+  - endpointSelector:
+      matchLabels:
+        io.cilium.k8s.namespace.labels.networking.tinyrack.net/isolation: enabled
+    egress:
+      - toEntities:
+          - kube-apiserver
+        toPorts:
+          - ports:
+              - port: "6443"
+                protocol: TCP
+  - endpointSelector:
+      matchLabels:
+        io.cilium.k8s.namespace.labels.networking.tinyrack.net/isolation: enabled
+        app.kubernetes.io/name: mariadb-operator-webhook
+    ingress:
+      - fromEntities:
+          - kube-apiserver
+        toPorts:
+          - ports:
+              - port: "9443"
+                protocol: TCP

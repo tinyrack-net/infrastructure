@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - reflector.namespace.yaml
   - reflector.helm-release.yaml
+  - reflector.cilium-network-policy.yaml

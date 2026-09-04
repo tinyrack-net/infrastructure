@@ -5,3 +5,4 @@ resources:
   - tinest-relay.deployment.yaml
   - tinest-relay.service.yaml
   - tinest-relay.ingress.yaml
+  - tinest-relay.cilium-network-policy.yaml

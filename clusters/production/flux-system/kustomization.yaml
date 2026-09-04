@@ -1,6 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
+- flux-system.cilium-network-policy.yaml
 - gotk-components.yaml
 - gotk-sync.yaml
 - image-automation.yaml

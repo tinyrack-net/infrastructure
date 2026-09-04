@@ -10,3 +10,4 @@ resources:
   - issuary.deployment.yaml
   - issuary.service.yaml
   - issuary.ingress.yaml
+  - issuary.cilium-network-policy.yaml

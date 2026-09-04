@@ -9,3 +9,4 @@ resources:
   - memos.deployment.yaml
   - memos.service.yaml
   - memos.ingress.yaml
+  - memos.cilium-network-policy.yaml

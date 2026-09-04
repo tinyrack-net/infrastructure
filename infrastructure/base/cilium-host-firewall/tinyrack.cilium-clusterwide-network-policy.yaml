@@ -1,0 +1,61 @@
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  name: tinyrack-host-firewall
+spec:
+  nodeSelector:
+    matchLabels:
+      node-role.kubernetes.io/control-plane: "true"
+  ingress:
+    - fromCIDR:
+        - 172.31.1.1/32
+      toPorts:
+        - ports:
+            - port: "68"
+              protocol: UDP
+    - fromEntities:
+        - cluster
+      toPorts:
+        - ports:
+            - port: "4240"
+              protocol: TCP
+            - port: "4244"
+              protocol: TCP
+            - port: "6443"
+              protocol: TCP
+            - port: "8472"
+              protocol: UDP
+            - port: "10250"
+              protocol: TCP
+    - fromEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "80"
+              protocol: TCP
+            - port: "443"
+              protocol: TCP
+    - fromEntities:
+        - world
+      icmps:
+        - fields:
+            - family: IPv4
+              type: 3
+            - family: IPv4
+              type: 11
+            - family: IPv6
+              type: 1
+            - family: IPv6
+              type: 2
+            - family: IPv6
+              type: 3
+            - family: IPv6
+              type: 4
+            - family: IPv6
+              type: 134
+            - family: IPv6
+              type: 135
+            - family: IPv6
+              type: 136
+            - family: IPv6
+              type: 137

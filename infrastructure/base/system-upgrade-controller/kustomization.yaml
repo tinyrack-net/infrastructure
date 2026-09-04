@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - crd.yaml
   - system-upgrade-controller.yaml
+  - system-upgrade.cilium-network-policy.yaml

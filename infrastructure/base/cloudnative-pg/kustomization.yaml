@@ -3,3 +3,5 @@ kind: Kustomization
 resources:
   - https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.30/releases/cnpg-1.30.0.yaml
   - https://github.com/cloudnative-pg/plugin-barman-cloud/releases/download/v0.14.0/manifest.yaml
+  - cloudnative-pg.cilium-network-policy.yaml
+  - cnpg-instances-kube-apiserver.cilium-clusterwide-network-policy.yaml

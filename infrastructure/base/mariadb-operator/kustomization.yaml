@@ -4,3 +4,4 @@ resources:
   - mariadb-operator.namespace.yaml
   - mariadb-operator.install-crds.yaml
   - mariadb-operator.install-operator.yaml
+  - mariadb-operator.cilium-network-policy.yaml

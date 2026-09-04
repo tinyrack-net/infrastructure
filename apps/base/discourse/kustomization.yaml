@@ -12,3 +12,4 @@ resources:
   - discourse.deployment.yaml
   - discourse.service.yaml
   - discourse.ingress.yaml
+  - discourse.cilium-network-policy.yaml

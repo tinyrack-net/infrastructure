@@ -1,0 +1,94 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: app-discourse
+  namespace: discourse-system
+specs:
+  - endpointSelector:
+      matchLabels:
+        io.cilium.k8s.namespace.labels.networking.tinyrack.net/isolation: enabled
+        app: discourse
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: traefik-system
+              app.kubernetes.io/name: traefik
+        toPorts:
+          - ports:
+              - port: "80"
+                protocol: TCP
+              - port: "443"
+                protocol: TCP
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: discourse-system
+              cnpg.io/cluster: discourse-database-15-cluster
+        toPorts:
+          - ports:
+              - port: "5432"
+                protocol: TCP
+      - toEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: discourse-system
+              app: discourse-redis
+        toPorts:
+          - ports:
+              - port: "6379"
+                protocol: TCP
+  - endpointSelector:
+      matchLabels:
+        io.cilium.k8s.namespace.labels.networking.tinyrack.net/isolation: enabled
+        app: discourse-redis
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: discourse-system
+              app: discourse
+        toPorts:
+          - ports:
+              - port: "6379"
+                protocol: TCP
+  - endpointSelector:
+      matchLabels:
+        io.cilium.k8s.namespace.labels.networking.tinyrack.net/isolation: enabled
+        cnpg.io/cluster: discourse-database-15-cluster
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: discourse-system
+              app: discourse
+        toPorts:
+          - ports:
+              - port: "5432"
+                protocol: TCP
+      - fromEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: cnpg-system
+        toPorts:
+          - ports:
+              - port: "8000"
+                protocol: TCP
+              - port: "9187"
+                protocol: TCP
+      - fromEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: discourse-system
+              cnpg.io/cluster: discourse-database-15-cluster
+        toPorts:
+          - ports:
+              - port: "5432"
+                protocol: TCP
+              - port: "8000"
+                protocol: TCP
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: discourse-system
+              cnpg.io/cluster: discourse-database-15-cluster
+        toPorts:
+          - ports:
+              - port: "5432"
+                protocol: TCP
+              - port: "8000"
+                protocol: TCP

@@ -4,3 +4,4 @@ resources:
   - cloudflared.namespace.yaml
   - cloudflared.secret.yaml
   - cloudflared.deployment.yaml
+  - cloudflared.cilium-network-policy.yaml

@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - traefik.namespace.yaml
   - traefik.helm-release.yaml
+  - traefik.cilium-network-policy.yaml
