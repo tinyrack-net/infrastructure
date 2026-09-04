@@ -22,11 +22,11 @@ egressGateway:
   enabled: false
 devices: eth0
 cni:
-  binPath: /var/lib/rancher/k3s/data/cni
-  confPath: /var/lib/rancher/k3s/agent/etc/cni/net.d
-  exclusive: false
+  binPath: /opt/cni/bin
+  confPath: /etc/cni/net.d
+  exclusive: true
   uninstall: false
-policyEnforcementMode: never
+policyEnforcementMode: default
 hostFirewall:
   enabled: false
 hubble:

@@ -7,6 +7,6 @@ setup_cilium_kube_context: tinyrack
 setup_cilium_node_name: tinyrack
 setup_cilium_device: eth0
 setup_cilium_values_path: "{{ playbook_dir }}/../../infrastructure/base/cilium/values.yaml"
-setup_cilium_cni_config_path: /var/lib/rancher/k3s/agent/etc/cni/net.d/05-cilium.conflist
+setup_cilium_cni_config_path: /etc/cni/net.d/05-cilium.conflist
 setup_cilium_flux_helm_release_name: cilium
 setup_cilium_ready_timeout: 10m
