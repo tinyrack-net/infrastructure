@@ -20,3 +20,4 @@ resources:
   - cnpg-network-policy-activation.yaml
   - backup-cleanup.yaml
   - ot-redis-operator.yaml
+  - cilium-host-firewall.yaml
