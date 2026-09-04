@@ -5,3 +5,51 @@ resources:
 - gotk-components.yaml
 - gotk-sync.yaml
 - image-automation.yaml
+patches:
+  - target:
+      version: v1
+      kind: Namespace
+      name: flux-system
+    patch: |-
+      - op: add
+        path: /metadata/labels/networking.tinyrack.net~1isolation
+        value: enabled
+  - target:
+      group: networking.k8s.io
+      version: v1
+      kind: NetworkPolicy
+      name: allow-egress
+      namespace: flux-system
+    patch: |-
+      $patch: delete
+      apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata:
+        name: allow-egress
+        namespace: flux-system
+  - target:
+      group: networking.k8s.io
+      version: v1
+      kind: NetworkPolicy
+      name: allow-scraping
+      namespace: flux-system
+    patch: |-
+      $patch: delete
+      apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata:
+        name: allow-scraping
+        namespace: flux-system
+  - target:
+      group: networking.k8s.io
+      version: v1
+      kind: NetworkPolicy
+      name: allow-webhooks
+      namespace: flux-system
+    patch: |-
+      $patch: delete
+      apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata:
+        name: allow-webhooks
+        namespace: flux-system
