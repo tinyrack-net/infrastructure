@@ -1,0 +1,61 @@
+---
+argument_specs:
+  main:
+    short_description: Configure a single-node K3s server using Flannel
+    options:
+      setup_k3s_server_version:
+        type: str
+        required: true
+      setup_k3s_server_cluster_cidr:
+        type: str
+        required: true
+      setup_k3s_server_service_cidr:
+        type: str
+        required: true
+      setup_k3s_server_tls_sans:
+        type: list
+        elements: str
+        required: true
+      setup_k3s_server_disabled_components:
+        type: list
+        elements: str
+        required: true
+      setup_k3s_server_inotify_settings:
+        type: dict
+        required: true
+      setup_k3s_server_inotify_sysctl_path:
+        type: str
+        required: true
+      setup_k3s_server_packages:
+        type: list
+        elements: str
+        required: true
+      setup_k3s_server_disabled_multipath_units:
+        type: list
+        elements: str
+        required: true
+      setup_k3s_server_resolver_nameservers:
+        type: list
+        elements: str
+        required: true
+      setup_k3s_server_resolver_search:
+        type: str
+        required: true
+      setup_k3s_server_install_script_url:
+        type: str
+        required: true
+      setup_k3s_server_install_script_path:
+        type: str
+        required: true
+      setup_k3s_server_config_path:
+        type: str
+        required: true
+      setup_k3s_server_resolver_path:
+        type: str
+        required: true
+      setup_k3s_server_service_unit_path:
+        type: str
+        required: true
+      setup_k3s_server_ready_timeout:
+        type: str
+        required: true

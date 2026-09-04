@@ -2,18 +2,6 @@
 - name: Run Sealed Secrets recovery key preflight checks
   ansible.builtin.import_tasks: preflight.yml
 
-- name: Inspect the K3s executable
-  ansible.builtin.stat:
-    path: /usr/local/bin/k3s
-  register: restore_sealed_secrets_key_k3s_executable
-
-- name: Require the K3s executable
-  ansible.builtin.assert:
-    that:
-      - restore_sealed_secrets_key_k3s_executable.stat.exists
-      - restore_sealed_secrets_key_k3s_executable.stat.executable
-    fail_msg: The Tinyrack server does not have an executable K3s installation.
-
 - name: Wait for the K3s node to become ready
   ansible.builtin.command:
     argv:
@@ -24,17 +12,25 @@
       - node
       - --all
       - "--timeout={{ restore_sealed_secrets_key_ready_timeout }}"
+  when: not ansible_check_mode or restore_sealed_secrets_key_k3s_executable.stat.exists
   changed_when: false
   check_mode: false
 
-- name: Restore the Sealed Secrets recovery key
+- name: Restore the missing Sealed Secrets recovery key
   ansible.builtin.command:
-    argv: [/usr/local/bin/k3s, kubectl, apply, -f, "-"]
+    argv:
+      - /usr/local/bin/k3s
+      - kubectl
+      - apply
+      - --filename=-
     stdin: "{{ lookup('ansible.builtin.template', 'sealed-secrets-key.yaml.j2') }}"
     stdin_add_newline: false
-  when: not ansible_check_mode
+  when:
+    - not ansible_check_mode
+    - >-
+      not restore_sealed_secrets_key_k3s_executable.stat.exists
+      or restore_sealed_secrets_key_existing_result.rc != 0
   register: restore_sealed_secrets_key_apply
-  failed_when: false
   changed_when: >-
     restore_sealed_secrets_key_apply.stdout_lines
     | select('search', ' (created|configured)$')
@@ -42,57 +38,12 @@
     | length > 0
   no_log: true
 
-- name: Require the Sealed Secrets recovery key restore to succeed
-  ansible.builtin.assert:
-    that:
-      - restore_sealed_secrets_key_apply.rc == 0
-    fail_msg: The Sealed Secrets recovery key could not be restored.
-  when: not ansible_check_mode
-
-- name: Inspect the Sealed Secrets controller
-  ansible.builtin.command:
-    argv:
-      - /usr/local/bin/k3s
-      - kubectl
-      - get
-      - deployment
-      - sealed-secrets
-      - --namespace
-      - "{{ restore_sealed_secrets_key_namespace }}"
-  register: restore_sealed_secrets_key_controller
-  failed_when: false
-  changed_when: false
-  check_mode: false
-
-- name: Restart the Sealed Secrets controller after restoring the key
-  ansible.builtin.command:
-    argv:
-      - /usr/local/bin/k3s
-      - kubectl
-      - rollout
-      - restart
-      - deployment/sealed-secrets
-      - --namespace
-      - "{{ restore_sealed_secrets_key_namespace }}"
+- name: Report a missing recovery key in check mode
+  ansible.builtin.debug:
+    msg: The Sealed Secrets recovery key would be created.
   when:
-    - not ansible_check_mode
-    - restore_sealed_secrets_key_apply.changed
-    - restore_sealed_secrets_key_controller.rc == 0
+    - ansible_check_mode
+    - >-
+      not restore_sealed_secrets_key_k3s_executable.stat.exists
+      or restore_sealed_secrets_key_existing_result.rc != 0
   changed_when: true
-  register: restore_sealed_secrets_key_restart
-
-- name: Wait for the restarted Sealed Secrets controller
-  ansible.builtin.command:
-    argv:
-      - /usr/local/bin/k3s
-      - kubectl
-      - rollout
-      - status
-      - deployment/sealed-secrets
-      - --namespace
-      - "{{ restore_sealed_secrets_key_namespace }}"
-      - "--timeout={{ restore_sealed_secrets_key_ready_timeout }}"
-  when:
-    - restore_sealed_secrets_key_restart is not skipped
-    - restore_sealed_secrets_key_restart is changed
-  changed_when: false

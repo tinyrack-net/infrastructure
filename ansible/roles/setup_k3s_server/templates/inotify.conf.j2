@@ -1,0 +1,4 @@
+# Managed by Ansible.
+{% for setting in setup_k3s_server_inotify_settings | dictsort %}
+{{ setting.0 }} = {{ setting.1 }}
+{% endfor %}

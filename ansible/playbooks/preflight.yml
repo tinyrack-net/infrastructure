@@ -1,21 +1,20 @@
 ---
-- name: Inspect the Tinyrack K3s server
+- name: Validate the Tinyrack K3s server
   hosts: k3s_servers
   gather_facts: true
   become: false
 
   tasks:
-    - name: Validate the supported host platform
-      ansible.builtin.assert:
-        that:
-          - ansible_facts.distribution == "Ubuntu"
-          - ansible_facts.distribution_version is version("24.04", ">=")
-          - ansible_facts.architecture == "x86_64"
-          - ansible_facts.virtualization_role == "guest"
-          - ansible_facts.virtualization_type in ["kvm", "qemu"]
-        fail_msg: The Tinyrack server must be an Ubuntu 24.04 or newer x86_64 KVM/QEMU guest.
+    - name: Run K3s server preflight checks
+      ansible.builtin.include_role:
+        name: setup_k3s_server
+        tasks_from: preflight
+        apply:
+          become: true
 
     - name: Validate the Sealed Secrets recovery key
       ansible.builtin.include_role:
         name: restore_sealed_secrets_key
         tasks_from: preflight
+        apply:
+          become: true

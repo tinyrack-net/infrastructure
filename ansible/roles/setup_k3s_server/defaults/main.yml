@@ -1,0 +1,35 @@
+---
+setup_k3s_server_version: v1.36.3+k3s1
+setup_k3s_server_cluster_cidr: 10.55.0.0/16
+setup_k3s_server_service_cidr: 10.56.0.0/16
+setup_k3s_server_tls_sans:
+  - 100.65.57.48
+  - tinyrack.time-inconnu.ts.net
+setup_k3s_server_disabled_components:
+  - traefik
+setup_k3s_server_inotify_settings:
+  fs.inotify.max_queued_events: 32768
+  fs.inotify.max_user_instances: 8192
+  fs.inotify.max_user_watches: 1048576
+setup_k3s_server_inotify_sysctl_path: /etc/sysctl.d/90-k3s-inotify.conf
+setup_k3s_server_packages:
+  - ca-certificates
+  - cryptsetup
+  - curl
+  - jq
+  - nfs-common
+  - open-iscsi
+setup_k3s_server_disabled_multipath_units:
+  - multipathd.socket
+  - multipathd.service
+setup_k3s_server_resolver_nameservers:
+  - 2a01:4ff:ff00::add:2
+  - 2a01:4ff:ff00::add:1
+  - 185.12.64.2
+setup_k3s_server_resolver_search: .
+setup_k3s_server_install_script_url: https://get.k3s.io
+setup_k3s_server_install_script_path: /usr/local/src/k3s-install.sh
+setup_k3s_server_config_path: /etc/rancher/k3s/config.yaml
+setup_k3s_server_resolver_path: /etc/rancher/k3s/resolv.conf
+setup_k3s_server_service_unit_path: /etc/systemd/system/k3s.service
+setup_k3s_server_ready_timeout: 300s

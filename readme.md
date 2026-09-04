@@ -70,78 +70,46 @@ flowchart TB
 
 ---
 
-# 설치
+# 재해 복구
 
-## Ansible 준비
+교체 머신에는 Ubuntu 24.04 amd64, SSH 사용자, Tailscale 연결을 먼저 준비해요. Ansible은 이 연결을 사용해 K3S 호스트 패키지와 커널 설정, Flannel 기반 단일 서버, Sealed Secrets 복구 키까지 구성해요. 호스트명, Tailscale 로그인, OS 업그레이드는 관리하지 않아요.
 
-`ansible/`은 `tinyrack-server` 머신 구성을 관리해요. Vault 비밀번호와 평문 시크릿은 Git에 커밋하지 않아요.
+Vault 비밀번호와 평문 시크릿은 Git에 커밋하지 않아요. `make vault-edit`에서 `vault_tinyrack_become_password`와 `vault_sealed_secrets_tls_key`를 실제 값으로 바꿔요. Sealed Secrets 키는 `tinyrack-production-key` 하나로 고정하며 controller의 자동 키 갱신은 비활성화해요.
+
+## 앱 복원 일시 중지
+
+다음은 저장소에서 `clusters/production/apps.yaml` 파일의 확장자 뒤에 `.bak` 을 붙여 푸시해요.
+이는 서비스를 제외한 인프라만 먼저 복원하고 이후 롱혼에서 서비스의 데이터 볼륨을 복원하기 위해서에요.
+
+## 머신과 K3S 구성
 
 ```bash
 cd ansible
+make vault-edit
 make ping
 make syntax
 make lint
 make preflight
 make check
 make apply
-make verify
-make vault-edit
-```
-
-`make vault-edit`에서 `vault_tinyrack_become_password`와 `vault_sealed_secrets_tls_key`를 실제 값으로 바꿔요.
-Sealed Secrets 키는 `tinyrack-production-key` 하나로 고정하며 controller의 자동 키 갱신은 비활성화해요.
-
-## Tailscale 설정
-
-```bash
-sudo tailscale up \
-  --accept-dns=false \
-  --reset
-```
-
-## K3S 설치
-
-먼저 쿠버네티스를 설치해요. 저는 [K3S](https://k3s.io/)라는 가벼운 배포판을 사용하고 있어요.
-
-```bash
-curl -fL https://get.k3s.io | \
-sh -s - server \
-  --cluster-init \
-  --cluster-cidr=10.55.0.0/16 \
-  --service-cidr=10.56.0.0/16 \
-  --tls-san=100.65.57.48 \
-  --tls-san=tinyrack.time-inconnu.ts.net \
-  --disable traefik
-```
-
-설치에 사용한 옵션과 이유는 다음과 같아요.
-
-- `--cluster-init`: 추후 고가용성 확장을 위해 `SQLite` 대신 `etcd` 를 클러스터 데이터베이스로 사용해요.
-- `--cluster-cidr=10.55.0.0/16`: 클러스터의 노드가 할당받는 IP 주소 범위를 변경해요.
-- `--service-cidr=10.56.0.0/16`: 클러스터의 서비스가 할당받는 IP 주소 범위를 변경해요.
-- `--disable traefik`: 기본 인그레스 컨트롤러를 비활성화해요. 이는 클라우드플레어가 대신해요.
-- `--disable servicelb`: 기본 로드 밸런서를 비활성화해요. 이는 클라우드플레어가 대신해요. 내부망 관리로는 `MetalLB`를 대신 사용해요.
-
-## Sealed Secrets 키 등록
-
-인프라를 복원하기 전에, 인프라의 암호화된 시크릿을 클러스터가 복호화할 수 있도록 키 등록이 먼저 필요해요.
-
-```bash
-cd ansible
 make apply
 make verify
+cd ..
 ```
 
-> 저장소에 등록된 키는 공개키이며, 이 과정에서는 비밀키가 필요해요.
+첫 번째 apply는 필요한 호스트 패키지를 설치하고, Longhorn과 충돌하는 multipath를 비활성화하고, iSCSI와 inotify 한계 및 K3S resolver를 구성해요. 이어서 `v1.36.3+k3s1`을 다음 설정으로 설치하거나 기존 설치를 안전하게 관리 상태로 편입해요.
 
-## Flux 에서 앱 복원 해제
+- embedded etcd 단일 서버
+- Pod CIDR `10.55.0.0/16`, Service CIDR `10.56.0.0/16`
+- TLS SAN `100.65.57.48`, `tinyrack.time-inconnu.ts.net`
+- Flannel, kube-proxy, ServiceLB 활성화
+- K3S 내장 Traefik 비활성화
 
-다음은 저장소에서 `clusters/production/apps.yaml` 파일의 확장자 뒤에 `.bak` 을 붙여 푸시해요.
-이는 서비스를 제외한 인프라만 먼저 복원하고 이후 롱혼에서 서비스의 데이터 볼륨을 복원하기 위해서에요.
+기존 클러스터의 CIDR이 다르면 Ansible은 변경하지 않고 중단해요. 두 번째 apply는 `changed=0`이어야 하며, verify는 K3S와 호스트 설정 및 Vault와 일치하는 단일 Sealed Secrets 키를 확인해요. 기존 키가 다르거나 추가 active 키가 있으면 자동으로 덮어쓰거나 삭제하지 않고 중단해요.
 
-## Flux 연동 및 복원
+## Flux 연동 및 인프라 복원
 
-이제 Flux를 연동하고 모든 인프라를 복원해요.
+Ansible 검증이 끝나면 Flux를 연동하고 인프라를 복원해요.
 
 ```bash
 flux bootstrap github \
@@ -151,7 +119,7 @@ flux bootstrap github \
   --owner=tinyrack-net
 ```
 
-## 롱혼에서 서비스의 PVC 복원
+## Longhorn에서 서비스 PVC 복원
 
 다음은 서비스들의 PVC 복원을 위해 롱혼의 UI에 접근해요.
 
@@ -161,28 +129,13 @@ flux bootstrap github \
 
 이후 시스템 복원에서 마지막 백업 데이터를 복원해요.
 
-## 서비스 복원
+## 앱 복원 재개
 
 이제 저장소에서 `clusters/production/apps.yaml.bak` 파일의 확장자 뒤에 `.bak` 을 제거해 푸시해요.
 이제 모든 서비스가 복원되며 기존의 PVC와 연결돼요.
 
-> 데이터베이스는 애플리케이션 레벨에서의 복원을 수행해야 해요.
-> Memos, Discourse 는 CloudnativePG 로 알아서 복원되지만 Ghost 는 MySQL 이라 수동으로 복원이 필요해요. 
-
-## ETCD 백업 활성화
-
-마지막으로 ETCD 백업을 활성화해요.
-
-```bash
-sudo -s
-
-cat > /etc/rancher/k3s/config.yaml << EOF
-etcd-s3: true
-etcd-s3-config-secret: k3s-etcd-s3-secret
-EOF
-
-systemctl restart k3s
-```
+> 데이터베이스는 애플리케이션 레벨에서 복원해야 해요.
+> Memos와 Discourse는 CloudNativePG 백업에서 복원해요.
 
 ---
 

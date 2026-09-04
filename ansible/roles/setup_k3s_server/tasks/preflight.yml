@@ -1,0 +1,126 @@
+---
+- name: Validate the K3s server operating system and architecture
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.distribution == "Ubuntu"
+      - ansible_facts.distribution_version == "24.04"
+      - ansible_facts.architecture == "x86_64"
+    fail_msg: This role supports only Ubuntu 24.04 amd64 hosts.
+
+- name: Validate the K3s configuration inputs
+  ansible.builtin.assert:
+    that:
+      - setup_k3s_server_version == "v1.36.3+k3s1"
+      - setup_k3s_server_cluster_cidr == "10.55.0.0/16"
+      - setup_k3s_server_service_cidr == "10.56.0.0/16"
+      - setup_k3s_server_cluster_cidr != setup_k3s_server_service_cidr
+      - setup_k3s_server_tls_sans | length > 0
+      - setup_k3s_server_disabled_components == ["traefik"]
+      - setup_k3s_server_resolver_nameservers | length > 0
+      - >-
+        ['fs.inotify.max_queued_events', 'fs.inotify.max_user_instances', 'fs.inotify.max_user_watches']
+        | difference(setup_k3s_server_inotify_settings.keys() | list)
+        | length == 0
+    fail_msg: The pinned K3s version, network ranges, TLS SANs, and host settings are required.
+
+- name: Inspect the K3s executable during preflight
+  ansible.builtin.stat:
+    path: /usr/local/bin/k3s
+  register: setup_k3s_server_preflight_executable
+
+- name: Inspect the K3s systemd unit during preflight
+  ansible.builtin.stat:
+    path: "{{ setup_k3s_server_service_unit_path }}"
+  register: setup_k3s_server_service_unit_file
+
+- name: Read the existing K3s systemd unit
+  ansible.builtin.slurp:
+    src: "{{ setup_k3s_server_service_unit_path }}"
+  when: setup_k3s_server_service_unit_file.stat.exists
+  register: setup_k3s_server_existing_service_unit_file
+
+- name: Decode the existing K3s systemd unit
+  ansible.builtin.set_fact:
+    setup_k3s_server_existing_service_unit: >-
+      {{
+        (setup_k3s_server_existing_service_unit_file.content | b64decode)
+        if setup_k3s_server_service_unit_file.stat.exists
+        else ''
+      }}
+
+- name: Refuse Cilium-only flags in the existing K3s systemd unit
+  ansible.builtin.assert:
+    that:
+      - "'--flannel-backend=none' not in setup_k3s_server_existing_service_unit"
+      - "'--disable-network-policy' not in setup_k3s_server_existing_service_unit"
+      - "'--disable-kube-proxy' not in setup_k3s_server_existing_service_unit"
+      - "'servicelb' not in setup_k3s_server_existing_service_unit"
+    fail_msg: The existing K3s unit disables networking components required by this Flannel cluster.
+
+- name: Inspect the existing K3s configuration during preflight
+  ansible.builtin.stat:
+    path: "{{ setup_k3s_server_config_path }}"
+  register: setup_k3s_server_preflight_config_file
+
+- name: Read the existing K3s configuration during preflight
+  ansible.builtin.slurp:
+    src: "{{ setup_k3s_server_config_path }}"
+  when: setup_k3s_server_preflight_config_file.stat.exists
+  register: setup_k3s_server_preflight_config_contents
+
+- name: Decode the existing K3s configuration during preflight
+  ansible.builtin.set_fact:
+    setup_k3s_server_preflight_config: >-
+      {{
+        (setup_k3s_server_preflight_config_contents.content | b64decode | from_yaml)
+        if setup_k3s_server_preflight_config_file.stat.exists
+        else {}
+      }}
+
+- name: Refuse Cilium-only flags in the existing K3s configuration
+  ansible.builtin.assert:
+    that:
+      - setup_k3s_server_preflight_config['flannel-backend'] | default('vxlan') != 'none'
+      - not (setup_k3s_server_preflight_config['disable-network-policy'] | default(false) | bool)
+      - not (setup_k3s_server_preflight_config['disable-kube-proxy'] | default(false) | bool)
+    fail_msg: The existing K3s configuration disables networking components required by this Flannel cluster.
+
+- name: Read the existing node Pod CIDR
+  ansible.builtin.command:
+    argv:
+      - /usr/local/bin/k3s
+      - kubectl
+      - get
+      - nodes
+      - --output=jsonpath={.items[0].spec.podCIDR}
+  when: setup_k3s_server_preflight_executable.stat.exists
+  register: setup_k3s_server_preflight_pod_cidr
+  changed_when: false
+  check_mode: false
+
+- name: Read the existing Kubernetes service IP
+  ansible.builtin.command:
+    argv:
+      - /usr/local/bin/k3s
+      - kubectl
+      - get
+      - service
+      - kubernetes
+      - --namespace=default
+      - --output=jsonpath={.spec.clusterIP}
+  when: setup_k3s_server_preflight_executable.stat.exists
+  register: setup_k3s_server_preflight_service_ip
+  changed_when: false
+  check_mode: false
+
+- name: Refuse to change immutable network ranges on an existing cluster
+  ansible.builtin.assert:
+    that:
+      - >-
+        setup_k3s_server_preflight_pod_cidr.stdout.split('.')[0:2]
+        == setup_k3s_server_cluster_cidr.split('.')[0:2]
+      - >-
+        setup_k3s_server_preflight_service_ip.stdout.split('.')[0:2]
+        == setup_k3s_server_service_cidr.split('.')[0:2]
+    fail_msg: The running cluster network does not match the managed Pod and Service CIDRs.
+  when: setup_k3s_server_preflight_executable.stat.exists

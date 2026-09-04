@@ -1,0 +1,175 @@
+---
+- name: Run K3s server preflight checks before verification
+  ansible.builtin.import_tasks: preflight.yml
+
+- name: Gather installed package facts
+  ansible.builtin.package_facts:
+    manager: auto
+
+- name: Gather service facts
+  ansible.builtin.service_facts:
+
+- name: Read multipath systemd unit states
+  ansible.builtin.command:
+    argv:
+      - /usr/bin/systemctl
+      - show
+      - "{{ item }}"
+      - --property=LoadState
+      - --property=ActiveState
+      - --property=UnitFileState
+  loop: "{{ setup_k3s_server_disabled_multipath_units }}"
+  register: setup_k3s_server_verified_multipath_units
+  changed_when: false
+
+- name: Verify multipath systemd units are disabled and stopped
+  ansible.builtin.assert:
+    that:
+      - >-
+        'LoadState=not-found' in item.stdout
+        or (
+          'ActiveState=inactive' in item.stdout
+          and 'UnitFileState=disabled' in item.stdout
+        )
+    fail_msg: "The {{ item.item }} unit must be disabled and stopped to avoid Longhorn conflicts."
+  loop: "{{ setup_k3s_server_verified_multipath_units.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+
+- name: Read the persisted K3s inotify limits
+  ansible.builtin.slurp:
+    src: "{{ setup_k3s_server_inotify_sysctl_path }}"
+  register: setup_k3s_server_inotify_sysctl_file
+
+- name: Read the active K3s inotify limits
+  ansible.builtin.command:
+    argv:
+      - /usr/sbin/sysctl
+      - -n
+      - "{{ item.key }}"
+  loop: "{{ setup_k3s_server_inotify_settings | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  register: setup_k3s_server_active_inotify_settings
+  changed_when: false
+
+- name: Verify the persisted and active K3s inotify limits
+  ansible.builtin.assert:
+    that:
+      - >-
+        (item.item.key ~ ' = ' ~ item.item.value)
+        in (setup_k3s_server_inotify_sysctl_file.content | b64decode).splitlines()
+      - item.stdout | int == item.item.value
+    fail_msg: "The {{ item.item.key }} inotify limit does not match the managed value."
+  loop: "{{ setup_k3s_server_active_inotify_settings.results }}"
+  loop_control:
+    label: "{{ item.item.key }}"
+
+- name: Read the installed K3s version
+  ansible.builtin.command:
+    cmd: /usr/local/bin/k3s --version
+  register: setup_k3s_server_verified_version
+  changed_when: false
+
+- name: Read the K3s configuration
+  ansible.builtin.slurp:
+    src: "{{ setup_k3s_server_config_path }}"
+  register: setup_k3s_server_verified_config_file
+
+- name: Read the K3s workload resolver
+  ansible.builtin.slurp:
+    src: "{{ setup_k3s_server_resolver_path }}"
+  register: setup_k3s_server_verified_resolver_file
+
+- name: Query the K3s node
+  ansible.builtin.command:
+    cmd: /usr/local/bin/k3s kubectl get node --output=json
+  register: setup_k3s_server_node
+  changed_when: false
+
+- name: Query the built-in Traefik deployment
+  ansible.builtin.command:
+    cmd: /usr/local/bin/k3s kubectl get deployment traefik --namespace kube-system
+  register: setup_k3s_server_traefik
+  failed_when: false
+  changed_when: false
+
+- name: Query LoadBalancer services
+  ansible.builtin.command:
+    cmd: /usr/local/bin/k3s kubectl get service --all-namespaces --output=json
+  register: setup_k3s_server_load_balancer_services
+  changed_when: false
+
+- name: Query ServiceLB daemon sets
+  ansible.builtin.command:
+    cmd: >-
+      /usr/local/bin/k3s kubectl get daemonset
+      --namespace kube-system
+      --selector=svccontroller.k3s.cattle.io/svcname
+      --output=name
+  register: setup_k3s_server_service_lb_daemon_sets
+  changed_when: false
+
+- name: Inspect the Flannel interface
+  ansible.builtin.command:
+    argv: [/usr/sbin/ip, link, show, dev, flannel.1]
+  changed_when: false
+
+- name: Decode the verified K3s state
+  ansible.builtin.set_fact:
+    setup_k3s_server_verified_config: >-
+      {{ setup_k3s_server_verified_config_file.content | b64decode | from_yaml }}
+    setup_k3s_server_verified_node: "{{ setup_k3s_server_node.stdout | from_json }}"
+    setup_k3s_server_verified_resolver: "{{ setup_k3s_server_verified_resolver_file.content | b64decode }}"
+    setup_k3s_server_verified_load_balancer_services: >-
+      {{ setup_k3s_server_load_balancer_services.stdout | from_json }}
+
+- name: Verify the K3s server state
+  ansible.builtin.assert:
+    that:
+      - setup_k3s_server_packages | difference(ansible_facts.packages.keys() | list) | length == 0
+      - setup_k3s_server_version in setup_k3s_server_verified_version.stdout
+      - ansible_facts.services["k3s.service"].state == "running"
+      - >-
+        setup_k3s_server_verified_config["cluster-init"] | default(false)
+        or '--cluster-init' in setup_k3s_server_existing_service_unit
+      - >-
+        setup_k3s_server_verified_config["cluster-cidr"] | default('') == setup_k3s_server_cluster_cidr
+        or ('--cluster-cidr=' ~ setup_k3s_server_cluster_cidr) in setup_k3s_server_existing_service_unit
+      - >-
+        setup_k3s_server_verified_config["service-cidr"] | default('') == setup_k3s_server_service_cidr
+        or ('--service-cidr=' ~ setup_k3s_server_service_cidr) in setup_k3s_server_existing_service_unit
+      - setup_k3s_server_verified_config.disable == setup_k3s_server_disabled_components
+      - "'--flannel-backend=none' not in setup_k3s_server_existing_service_unit"
+      - not (setup_k3s_server_verified_config["disable-network-policy"] | default(false) | bool)
+      - not (setup_k3s_server_verified_config["disable-kube-proxy"] | default(false) | bool)
+      - "'--disable-network-policy' not in setup_k3s_server_existing_service_unit"
+      - "'--disable-kube-proxy' not in setup_k3s_server_existing_service_unit"
+      - "'servicelb' not in setup_k3s_server_existing_service_unit"
+      - >-
+        setup_k3s_server_verified_load_balancer_services['items']
+        | selectattr('spec.type', 'equalto', 'LoadBalancer')
+        | list
+        | length == 0
+        or setup_k3s_server_service_lb_daemon_sets.stdout_lines | length > 0
+      - setup_k3s_server_traefik.rc != 0
+      - setup_k3s_server_verified_node['items'][0].status.conditions | selectattr('type', 'equalto', 'Ready')
+        | selectattr('status', 'equalto', 'True') | list | length == 1
+      - "'node-role.kubernetes.io/etcd' in setup_k3s_server_verified_node['items'][0].metadata.labels"
+      - "'resolv-conf=' ~ setup_k3s_server_resolver_path in setup_k3s_server_verified_config['kubelet-arg']"
+      - >-
+        setup_k3s_server_resolver_nameservers
+        | map('regex_replace', '^', 'nameserver ')
+        | difference(setup_k3s_server_verified_resolver.splitlines())
+        | length == 0
+      - "'search ' ~ setup_k3s_server_resolver_search in setup_k3s_server_verified_resolver.splitlines()"
+    fail_msg: The K3s server does not match the managed configuration.
+
+- name: Verify each K3s TLS SAN
+  ansible.builtin.assert:
+    that:
+      - >-
+        item in (setup_k3s_server_verified_config["tls-san"] | default([]))
+        or ('--tls-san=' ~ item) in setup_k3s_server_existing_service_unit
+    fail_msg: "The {{ item }} TLS SAN is missing from the effective K3s configuration."
+  loop: "{{ setup_k3s_server_tls_sans }}"

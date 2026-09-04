@@ -13,6 +13,13 @@
         fail_msg: Run `make vault-edit` and replace the become password placeholder before verifying.
 
   tasks:
+    - name: Verify K3s server configuration
+      ansible.builtin.include_role:
+        name: setup_k3s_server
+        tasks_from: verify
+        apply:
+          become: true
+
     - name: Verify the Sealed Secrets recovery key
       ansible.builtin.include_role:
         name: restore_sealed_secrets_key

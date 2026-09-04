@@ -2,38 +2,26 @@
 - name: Run Sealed Secrets recovery key preflight checks before verification
   ansible.builtin.import_tasks: preflight.yml
 
-- name: Read the restored Sealed Secrets recovery key
-  ansible.builtin.command:
-    argv:
-      - /usr/local/bin/k3s
-      - kubectl
-      - get
-      - secret
-      - "{{ restore_sealed_secrets_key_secret_name }}"
-      - --namespace
-      - "{{ restore_sealed_secrets_key_namespace }}"
-      - --output=json
-  register: restore_sealed_secrets_key_result
-  changed_when: false
-  no_log: true
-
-- name: Decode the restored Sealed Secrets recovery key
-  ansible.builtin.set_fact:
-    restore_sealed_secrets_key_resource: "{{ restore_sealed_secrets_key_result.stdout | from_json }}"
-  no_log: true
-
-- name: Verify the restored Sealed Secrets recovery key
+- name: Require the single Sealed Secrets recovery key to exist
   ansible.builtin.assert:
     that:
-      - restore_sealed_secrets_key_resource.type == "kubernetes.io/tls"
+      - restore_sealed_secrets_key_k3s_executable.stat.exists
+      - restore_sealed_secrets_key_existing_result.rc == 0
+    fail_msg: The Sealed Secrets recovery key is missing from the cluster.
+  no_log: true
+
+- name: Verify the single Sealed Secrets recovery key
+  ansible.builtin.assert:
+    that:
+      - restore_sealed_secrets_key_existing_resource.type == "kubernetes.io/tls"
       - >-
-        restore_sealed_secrets_key_resource.metadata.labels["sealedsecrets.bitnami.com/sealed-secrets-key"]
+        restore_sealed_secrets_key_existing_resource.metadata.labels["sealedsecrets.bitnami.com/sealed-secrets-key"]
         == "active"
       - >-
-        restore_sealed_secrets_key_resource.data["tls.crt"]
-        == (lookup('ansible.builtin.file', restore_sealed_secrets_key_tls_crt_path, rstrip=false) | b64encode)
+        restore_sealed_secrets_key_existing_certificate_public_key.stdout
+        == restore_sealed_secrets_key_certificate_public_key.stdout
       - >-
-        restore_sealed_secrets_key_resource.data["tls.key"]
-        == (restore_sealed_secrets_key_tls_key | b64encode)
+        restore_sealed_secrets_key_existing_private_public_key.stdout
+        == restore_sealed_secrets_key_private_public_key.stdout
     fail_msg: The restored Sealed Secrets recovery key does not match the Vault values.
   no_log: true

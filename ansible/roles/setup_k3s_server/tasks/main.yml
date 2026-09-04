@@ -1,0 +1,264 @@
+---
+- name: Run K3s server preflight checks
+  ansible.builtin.import_tasks: preflight.yml
+
+- name: Gather installed package facts
+  ansible.builtin.package_facts:
+    manager: auto
+
+- name: Read the installed K3s version
+  ansible.builtin.command:
+    cmd: /usr/local/bin/k3s --version
+  register: setup_k3s_server_installed_version
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Inspect the K3s configuration directory
+  ansible.builtin.stat:
+    path: "{{ setup_k3s_server_config_path | dirname }}"
+  register: setup_k3s_server_config_directory
+
+- name: Inspect the K3s configuration
+  ansible.builtin.stat:
+    path: "{{ setup_k3s_server_config_path }}"
+  register: setup_k3s_server_config_file
+
+- name: Read the existing K3s configuration
+  ansible.builtin.slurp:
+    src: "{{ setup_k3s_server_config_path }}"
+  when: setup_k3s_server_config_file.stat.exists
+  register: setup_k3s_server_existing_config_file
+
+- name: Decode the existing K3s configuration
+  ansible.builtin.set_fact:
+    setup_k3s_server_existing_config: >-
+      {{
+        (setup_k3s_server_existing_config_file.content | b64decode | from_yaml)
+        if setup_k3s_server_config_file.stat.exists
+        else {}
+      }}
+
+- name: Build the managed kubelet arguments
+  ansible.builtin.set_fact:
+    setup_k3s_server_managed_kubelet_args: >-
+      {{
+        (
+          setup_k3s_server_existing_config['kubelet-arg'] | default([])
+          | reject('match', '^resolv-conf=')
+          | list
+        )
+        + ['resolv-conf=' ~ setup_k3s_server_resolver_path]
+      }}
+
+- name: Build the managed K3s configuration
+  ansible.builtin.set_fact:
+    setup_k3s_server_managed_config: >-
+      {{
+        setup_k3s_server_existing_config
+        | combine({'kubelet-arg': setup_k3s_server_managed_kubelet_args})
+        | combine({'disable': setup_k3s_server_disabled_components})
+        | combine(
+            {'cluster-init': true}
+            if '--cluster-init' not in setup_k3s_server_existing_service_unit
+            else {}
+          )
+        | combine(
+            {'cluster-cidr': setup_k3s_server_cluster_cidr}
+            if '--cluster-cidr=' not in setup_k3s_server_existing_service_unit
+            else {}
+          )
+        | combine(
+            {'service-cidr': setup_k3s_server_service_cidr}
+            if '--service-cidr=' not in setup_k3s_server_existing_service_unit
+            else {}
+          )
+        | combine(
+            {'tls-san': setup_k3s_server_tls_sans}
+            if '--tls-san=' not in setup_k3s_server_existing_service_unit
+            else {}
+          )
+      }}
+
+- name: Configure K3s inotify limits
+  ansible.builtin.template:
+    src: inotify.conf.j2
+    dest: "{{ setup_k3s_server_inotify_sysctl_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Read active K3s inotify limits before applying them
+  ansible.builtin.command:
+    argv:
+      - /usr/sbin/sysctl
+      - -n
+      - "{{ item.key }}"
+  loop: "{{ setup_k3s_server_inotify_settings | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  register: setup_k3s_server_active_inotify_settings_before_apply
+  changed_when: false
+  check_mode: false
+
+- name: Detect active K3s inotify drift
+  ansible.builtin.set_fact:
+    setup_k3s_server_inotify_drift: >-
+      {{
+        (setup_k3s_server_inotify_drift | default(false))
+        or (item.stdout | int != item.item.value)
+      }}
+  loop: "{{ setup_k3s_server_active_inotify_settings_before_apply.results }}"
+  loop_control:
+    label: "{{ item.item.key }}"
+
+- name: Apply K3s inotify limits
+  ansible.builtin.command:
+    argv:
+      - /usr/sbin/sysctl
+      - --load
+      - "{{ setup_k3s_server_inotify_sysctl_path }}"
+  when:
+    - not ansible_check_mode
+    - setup_k3s_server_inotify_drift
+  changed_when: true
+
+- name: Report K3s inotify drift in check mode
+  ansible.builtin.debug:
+    msg: The active K3s inotify limits would be updated.
+  when:
+    - ansible_check_mode
+    - setup_k3s_server_inotify_drift
+  changed_when: true
+
+- name: Install K3s host packages
+  ansible.builtin.apt:
+    name: "{{ setup_k3s_server_packages }}"
+    state: present
+    update_cache: true
+
+- name: Inspect multipath systemd units
+  ansible.builtin.command:
+    argv:
+      - /usr/bin/systemctl
+      - show
+      - "{{ item }}"
+      - --property=LoadState
+  loop: "{{ setup_k3s_server_disabled_multipath_units }}"
+  register: setup_k3s_server_multipath_units
+  changed_when: false
+  check_mode: false
+
+- name: Disable multipath services that conflict with Longhorn
+  ansible.builtin.systemd_service:
+    name: "{{ item.item }}"
+    enabled: false
+    state: stopped
+  loop: "{{ setup_k3s_server_multipath_units.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when: item.stdout == "LoadState=loaded"
+
+- name: Enable the iSCSI socket
+  ansible.builtin.systemd_service:
+    name: iscsid.socket
+    enabled: true
+    state: started
+  when: not ansible_check_mode or "open-iscsi" in ansible_facts.packages
+
+- name: Start the iSCSI daemon
+  ansible.builtin.systemd_service:
+    name: iscsid.service
+    state: started
+  when: not ansible_check_mode or "open-iscsi" in ansible_facts.packages
+
+- name: Create the K3s configuration directory
+  ansible.builtin.file:
+    path: "{{ setup_k3s_server_config_path | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Configure the K3s workload resolver
+  ansible.builtin.template:
+    src: resolv.conf.j2
+    dest: "{{ setup_k3s_server_resolver_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart K3s
+  when: not ansible_check_mode or setup_k3s_server_config_directory.stat.exists
+
+- name: Configure K3s
+  ansible.builtin.template:
+    src: config.yaml.j2
+    dest: "{{ setup_k3s_server_config_path }}"
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Restart K3s
+  when: not ansible_check_mode or setup_k3s_server_config_directory.stat.exists
+
+- name: Create the K3s installer directory when installation is required
+  ansible.builtin.file:
+    path: "{{ setup_k3s_server_install_script_path | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: setup_k3s_server_version not in setup_k3s_server_installed_version.stdout
+
+- name: Download the K3s installer when installation is required
+  ansible.builtin.get_url:
+    url: "{{ setup_k3s_server_install_script_url }}"
+    dest: "{{ setup_k3s_server_install_script_path }}"
+    owner: root
+    group: root
+    mode: "0755"
+  when:
+    - setup_k3s_server_version not in setup_k3s_server_installed_version.stdout
+    - not ansible_check_mode
+
+- name: Install the pinned K3s version
+  ansible.builtin.command:
+    cmd: "{{ setup_k3s_server_install_script_path }}"
+  environment:
+    INSTALL_K3S_EXEC: server
+    INSTALL_K3S_VERSION: "{{ setup_k3s_server_version }}"
+  when:
+    - not ansible_check_mode
+    - setup_k3s_server_version not in setup_k3s_server_installed_version.stdout
+  changed_when: true
+
+- name: Report a pending K3s installation in check mode
+  ansible.builtin.debug:
+    msg: K3s {{ setup_k3s_server_version }} would be installed.
+  when:
+    - ansible_check_mode
+    - setup_k3s_server_version not in setup_k3s_server_installed_version.stdout
+  changed_when: true
+
+- name: Enable and start K3s
+  ansible.builtin.systemd_service:
+    name: k3s.service
+    enabled: true
+    state: started
+  when: not ansible_check_mode or setup_k3s_server_installed_version.rc == 0
+
+- name: Apply pending K3s configuration changes before restoring secrets
+  ansible.builtin.meta: flush_handlers
+
+- name: Wait for the K3s node to become ready
+  ansible.builtin.command:
+    argv:
+      - /usr/local/bin/k3s
+      - kubectl
+      - wait
+      - --for=condition=Ready
+      - node
+      - --all
+      - "--timeout={{ setup_k3s_server_ready_timeout }}"
+  when: not ansible_check_mode or setup_k3s_server_installed_version.rc == 0
+  changed_when: false
+  check_mode: false

@@ -1,0 +1,6 @@
+---
+- name: Restart K3s
+  ansible.builtin.systemd_service:
+    name: k3s.service
+    state: restarted
+  when: setup_k3s_server_installed_version.rc == 0

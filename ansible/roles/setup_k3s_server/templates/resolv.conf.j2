@@ -1,0 +1,5 @@
+# Managed by Ansible for K3s workloads.
+{% for nameserver in setup_k3s_server_resolver_nameservers %}
+nameserver {{ nameserver }}
+{% endfor %}
+search {{ setup_k3s_server_resolver_search }}
