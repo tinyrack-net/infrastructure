@@ -152,6 +152,42 @@
   register: setup_cilium_isolated_namespace_state
   changed_when: false
 
+- name: Query public host TCP allowances
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ setup_cilium_kube_context }}"
+      - get
+      - ciliumclusterwidenetworkpolicy
+      - tinyrack-host-firewall
+      - >-
+        --output=jsonpath={range .spec.ingress[?(@.fromEntities[0]=="world")].toPorts[*].ports[*]}
+        {.port}{"/"}{.protocol}{"\n"}{end}
+  delegate_to: localhost
+  become: false
+  register: setup_cilium_public_host_ports
+  changed_when: false
+
+- name: Query public Traefik TCP allowances
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ setup_cilium_kube_context }}"
+      - --namespace
+      - traefik-system
+      - get
+      - ciliumnetworkpolicy
+      - platform-traefik
+      - >-
+        --output=jsonpath={range .spec.ingress[?(@.fromEntities[0]=="world")].toPorts[*].ports[*]}
+        {.port}{"/"}{.protocol}{"\n"}{end}
+  delegate_to: localhost
+  become: false
+  register: setup_cilium_public_traefik_ports
+  changed_when: false
+
 - name: Read the installed Cilium values
   ansible.builtin.command:
     argv:
@@ -193,6 +229,8 @@
       - "'Hubble:' in setup_cilium_detailed_status.stdout"
       - "'Hubble:                  Ok' in setup_cilium_detailed_status.stdout"
       - setup_cilium_endpoints.stdout is regex('(?m)^\\d+\\s+Enabled\\s+Disabled\\s+1\\s+')
+      - setup_cilium_public_host_ports.stdout | trim | length == 0
+      - setup_cilium_public_traefik_ports.stdout | trim | length == 0
       - >-
         ((setup_cilium_isolated_namespace_state.stdout | from_json)['items']
         | map(attribute='metadata.name') | list | sort)
