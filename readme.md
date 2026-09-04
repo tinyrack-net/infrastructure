@@ -35,6 +35,12 @@ flowchart TB
 
 이 클러스터는 **제로 트러스트** 보안 전략으로 구축되어 있어요. 그래서 공인 IP를 통한 모든 네트워크 접근은 방화벽에서 차단돼요. 외부에서는 오직 [클라우드플레어 터널](https://blog.cloudflare.com/ko-kr/tag/cloudflare-tunnel/)을 통해서만 서비스로 접근할 수 있고 클러스터 관리는 [테일스케일](https://tailscale.com/)을 통해 가상 사설망에서 이루어져요.
 
+### 호스트 방화벽 운영
+
+Cilium 호스트 방화벽은 공인 `eth0`의 TCP ingress를 전부 차단해요. 서비스는 outbound Cloudflare Tunnel이 Traefik 8443에 연결하고, SSH와 Kubernetes API는 Tailscale을 통해서만 접근해요.
+
+정책 변경 전에는 `reserved:host` endpoint에 `PolicyAuditMode`를 켜고 Hubble과 `cilium-dbg monitor`를 관찰해요. Audit Mode는 Cilium 재시작 후 유지되지 않아요. 장애 시 Tailscale SSH 또는 Hetzner console로 접속해 Audit Mode를 다시 켜고, Flux의 `cilium-host-firewall` Kustomization을 suspend한 뒤 Git 정책을 되돌려 reconcile해요.
+
 ## 데이터 관리
 
 서비스의 모든 영구 데이터(Persistant Data)는 클러스터 내부에 저장돼요. 다시 말해서, 모두가 기피하는 **상태가 있는(Stateful) 쿠버네티스에요.** 데이터는 일정 주기마다 제 홈랩 스토리지 서버에 백업되고, 이는 외부 스토리지 서버로 다시 백업되어 [3-2-1 백업 전략](https://experience.dropbox.com/ko-kr/resources/3-2-1-backup-strategy)을 지키고 있어요.
