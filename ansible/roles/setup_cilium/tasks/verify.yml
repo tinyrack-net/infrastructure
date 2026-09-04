@@ -34,6 +34,22 @@
   become: false
   changed_when: false
 
+- name: Wait for the Hubble relay
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ setup_cilium_kube_context }}"
+      - --namespace
+      - "{{ setup_cilium_namespace }}"
+      - rollout
+      - status
+      - deployment/hubble-relay
+      - "--timeout={{ setup_cilium_ready_timeout }}"
+  delegate_to: localhost
+  become: false
+  changed_when: false
+
 - name: Query Cilium status
   ansible.builtin.command:
     argv:
@@ -51,6 +67,89 @@
   delegate_to: localhost
   become: false
   register: setup_cilium_status
+  changed_when: false
+
+- name: Query detailed Cilium status
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ setup_cilium_kube_context }}"
+      - --namespace
+      - "{{ setup_cilium_namespace }}"
+      - exec
+      - daemonset/cilium
+      - --
+      - cilium-dbg
+      - status
+  delegate_to: localhost
+  become: false
+  register: setup_cilium_detailed_status
+  changed_when: false
+
+- name: Query Cilium endpoints
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ setup_cilium_kube_context }}"
+      - --namespace
+      - "{{ setup_cilium_namespace }}"
+      - exec
+      - daemonset/cilium
+      - --
+      - cilium-dbg
+      - endpoint
+      - list
+  delegate_to: localhost
+  become: false
+  register: setup_cilium_endpoints
+  changed_when: false
+
+- name: Wait for namespaced Cilium policies to be valid
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ setup_cilium_kube_context }}"
+      - wait
+      - ciliumnetworkpolicy
+      - --all
+      - --all-namespaces
+      - --for=condition=Valid=True
+      - "--timeout={{ setup_cilium_ready_timeout }}"
+  delegate_to: localhost
+  become: false
+  changed_when: false
+
+- name: Wait for cluster-wide Cilium policies to be valid
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ setup_cilium_kube_context }}"
+      - wait
+      - ciliumclusterwidenetworkpolicy
+      - --all
+      - --for=condition=Valid=True
+      - "--timeout={{ setup_cilium_ready_timeout }}"
+  delegate_to: localhost
+  become: false
+  changed_when: false
+
+- name: Query isolated namespaces
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ setup_cilium_kube_context }}"
+      - get
+      - namespace
+      - --selector=networking.tinyrack.net/isolation=enabled
+      - --output=json
+  delegate_to: localhost
+  become: false
+  register: setup_cilium_isolated_namespace_state
   changed_when: false
 
 - name: Read the installed Cilium values
@@ -85,5 +184,17 @@
       - (setup_cilium_installed_values.stdout | from_json).bpf.masquerade | bool
       - (setup_cilium_installed_values.stdout | from_json).cni.confPath == setup_cilium_cni_config_path | dirname
       - (setup_cilium_installed_values.stdout | from_json).devices == setup_cilium_device
-      - not ((setup_cilium_installed_values.stdout | from_json).hubble.enabled | bool)
-    fail_msg: Cilium or kube-proxy replacement is not healthy.
+      - (setup_cilium_installed_values.stdout | from_json).hostFirewall.enabled | bool
+      - (setup_cilium_installed_values.stdout | from_json).hubble.enabled | bool
+      - (setup_cilium_installed_values.stdout | from_json).hubble.relay.enabled | bool
+      - not ((setup_cilium_installed_values.stdout | from_json).hubble.ui.enabled | bool)
+      - "'Host firewall:' in setup_cilium_detailed_status.stdout"
+      - "'Enabled   [' + setup_cilium_device + ']' in setup_cilium_detailed_status.stdout"
+      - "'Hubble:' in setup_cilium_detailed_status.stdout"
+      - "'Hubble:                  Ok' in setup_cilium_detailed_status.stdout"
+      - setup_cilium_endpoints.stdout is regex('(?m)^\\d+\\s+Enabled\\s+Disabled\\s+1\\s+')
+      - >-
+        ((setup_cilium_isolated_namespace_state.stdout | from_json)['items']
+        | map(attribute='metadata.name') | list | sort)
+        == (setup_cilium_isolated_namespaces | sort)
+    fail_msg: Cilium, Hubble, host firewall, or workload policy enforcement is not healthy.
