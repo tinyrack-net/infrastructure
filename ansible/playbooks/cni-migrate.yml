@@ -1,0 +1,279 @@
+---
+- name: Migrate the single-node Tinyrack K3s cluster to Cilium
+  hosts: k3s_servers
+  gather_facts: true
+  become: false
+  vars:
+    cni_migrate_marker_path: /etc/rancher/k3s/cilium-migrated
+    cni_migrate_backup_directory: /var/lib/rancher/k3s/server/cni-migration
+    cni_migrate_backup_config_path: /var/lib/rancher/k3s/server/cni-migration/config.yaml.pre-cilium
+    cni_migrate_flannel_config_path: /var/lib/rancher/k3s/agent/etc/cni/net.d/10-flannel.conflist
+
+  pre_tasks:
+    - name: Require the Tinyrack become password
+      ansible.builtin.assert:
+        that:
+          - ansible_become_password is defined
+          - ansible_become_password != "CHANGE_ME"
+
+    - name: Check whether Cilium migration is complete
+      ansible.builtin.stat:
+        path: "{{ cni_migrate_marker_path }}"
+      become: true
+      register: cni_migrate_marker
+
+    - name: Stop when migration has already completed
+      ansible.builtin.meta: end_play
+      when: cni_migrate_marker.stat.exists
+
+    - name: Read the current K3s configuration
+      ansible.builtin.slurp:
+        src: /etc/rancher/k3s/config.yaml
+      become: true
+      register: cni_migrate_current_k3s_config_file
+
+    - name: Detect a migration resuming after the K3s switch
+      ansible.builtin.set_fact:
+        cni_migrate_k3s_already_switched: >-
+          {{
+            (cni_migrate_current_k3s_config_file.content | b64decode | from_yaml)['flannel-backend']
+            | default('') == 'none'
+          }}
+
+    - name: Verify Cilium before disabling Flannel
+      ansible.builtin.include_role:
+        name: setup_cilium
+        tasks_from: verify
+        apply:
+          become: true
+      when: not (cni_migrate_k3s_already_switched | bool)
+
+    - name: Verify pre-migration backups and idle backup jobs
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - tinyrack
+          - get
+          - backups.postgresql.cnpg.io
+          - --all-namespaces
+          - --field-selector=metadata.name=pre-cilium-20260904
+          - --output=json
+      delegate_to: localhost
+      become: false
+      register: cni_migrate_cnpg_backups
+      changed_when: false
+
+    - name: Read the pre-migration Longhorn system backup
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - tinyrack
+          - --namespace
+          - longhorn-system
+          - get
+          - systembackup.longhorn.io
+          - pre-cilium-20260904
+          - --output=json
+      delegate_to: localhost
+      become: false
+      register: cni_migrate_longhorn_backup
+      changed_when: false
+
+    - name: Read active Kubernetes jobs
+      ansible.builtin.command:
+        argv: [kubectl, --context, tinyrack, get, jobs, --all-namespaces, --output=json]
+      delegate_to: localhost
+      become: false
+      register: cni_migrate_jobs
+      changed_when: false
+
+    - name: Require successful backups and no active jobs
+      ansible.builtin.assert:
+        that:
+          - (cni_migrate_cnpg_backups.stdout | from_json).items | length == 3
+          - >-
+            (cni_migrate_cnpg_backups.stdout | from_json).items
+            | map(attribute='status.phase')
+            | reject('equalto', 'completed')
+            | list
+            | length == 0
+          - (cni_migrate_longhorn_backup.stdout | from_json).status.state == "Ready"
+          - >-
+            (cni_migrate_jobs.stdout | from_json).items
+            | selectattr('status.active', 'defined')
+            | selectattr('status.active', 'gt', 0)
+            | list
+            | length == 0
+        fail_msg: Current CNPG and Longhorn backups are required and no backup job may be active.
+
+    - name: Save an etcd snapshot before CNI migration
+      ansible.builtin.command:
+        argv: [/usr/local/bin/k3s, etcd-snapshot, save, --name, pre-cilium-migration]
+      become: true
+      changed_when: true
+
+    - name: Create the CNI migration backup directory
+      ansible.builtin.file:
+        path: "{{ cni_migrate_backup_directory }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0700"
+      become: true
+
+    - name: Back up the pre-Cilium K3s configuration
+      ansible.builtin.copy:
+        src: /etc/rancher/k3s/config.yaml
+        dest: "{{ cni_migrate_backup_config_path }}"
+        remote_src: true
+        owner: root
+        group: root
+        mode: "0600"
+        force: false
+      become: true
+
+  tasks:
+    - name: Cordon the single K3s node
+      ansible.builtin.command:
+        argv: [kubectl, --context, tinyrack, cordon, tinyrack]
+      delegate_to: localhost
+      become: false
+      register: cni_migrate_cordon
+      changed_when: "'cordoned' in cni_migrate_cordon.stdout"
+
+    - name: Apply the Cilium K3s configuration
+      ansible.builtin.include_role:
+        name: setup_k3s_server
+        apply:
+          become: true
+
+    - name: Apply the pending K3s restart
+      ansible.builtin.meta: flush_handlers
+
+    - name: Wait for the Kubernetes API after the K3s restart
+      ansible.builtin.command:
+        argv: [kubectl, --context, tinyrack, get, node, tinyrack]
+      delegate_to: localhost
+      become: false
+      register: cni_migrate_api
+      until: cni_migrate_api.rc == 0
+      retries: 60
+      delay: 5
+      changed_when: false
+
+    - name: List Pods created by the old CNI
+      ansible.builtin.command:
+        argv: [kubectl, --context, tinyrack, get, pods, --all-namespaces, --output=json]
+      delegate_to: localhost
+      become: false
+      register: cni_migrate_pods
+      changed_when: false
+
+    - name: Recreate non-host-network Pods under Cilium
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - tinyrack
+          - delete
+          - pod
+          - --namespace
+          - "{{ item.metadata.namespace }}"
+          - "{{ item.metadata.name }}"
+          - --wait=false
+      delegate_to: localhost
+      become: false
+      loop: "{{ (cni_migrate_pods.stdout | from_json)['items'] }}"
+      loop_control:
+        label: "{{ item.metadata.namespace }}/{{ item.metadata.name }}"
+      when: not (item.spec.hostNetwork | default(false) | bool)
+      changed_when: true
+
+    - name: Wait for old Pod sandboxes to be deleted
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - tinyrack
+          - wait
+          - pod
+          - --namespace
+          - "{{ item.metadata.namespace }}"
+          - "{{ item.metadata.name }}"
+          - --for=delete
+          - --timeout=5m
+      delegate_to: localhost
+      become: false
+      loop: "{{ (cni_migrate_pods.stdout | from_json)['items'] }}"
+      loop_control:
+        label: "{{ item.metadata.namespace }}/{{ item.metadata.name }}"
+      when: not (item.spec.hostNetwork | default(false) | bool)
+      changed_when: false
+
+    - name: Remove the legacy Flannel CNI configuration
+      ansible.builtin.file:
+        path: "{{ cni_migrate_flannel_config_path }}"
+        state: absent
+      become: true
+
+    - name: Remove legacy Flannel interfaces after Pod evacuation
+      ansible.builtin.command:
+        argv: [/usr/sbin/ip, link, delete, "{{ item }}"]
+      become: true
+      loop:
+        - flannel.1
+        - cni0
+      register: cni_migrate_legacy_link_removal
+      changed_when: cni_migrate_legacy_link_removal.rc == 0
+      failed_when:
+        - cni_migrate_legacy_link_removal.rc != 0
+        - "'Cannot find device' not in cni_migrate_legacy_link_removal.stderr"
+
+    - name: Restart Cilium after legacy datapath cleanup
+      ansible.builtin.command:
+        argv: [kubectl, --context, tinyrack, rollout, restart, --namespace, kube-system, daemonset/cilium]
+      delegate_to: localhost
+      become: false
+      changed_when: true
+
+    - name: Wait for the Cilium daemon set
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - tinyrack
+          - --namespace
+          - kube-system
+          - rollout
+          - status
+          - daemonset/cilium
+          - --timeout=10m
+      delegate_to: localhost
+      become: false
+      changed_when: false
+
+    - name: Uncordon the K3s node
+      ansible.builtin.command:
+        argv: [kubectl, --context, tinyrack, uncordon, tinyrack]
+      delegate_to: localhost
+      become: false
+      register: cni_migrate_uncordon
+      changed_when: "'uncordoned' in cni_migrate_uncordon.stdout"
+
+    - name: Verify Cilium after Pod recreation
+      ansible.builtin.include_role:
+        name: setup_cilium
+        tasks_from: verify
+        apply:
+          become: true
+
+    - name: Record successful Cilium migration
+      ansible.builtin.copy:
+        content: "Cilium 1.20.1 migration completed\n"
+        dest: "{{ cni_migrate_marker_path }}"
+        owner: root
+        group: root
+        mode: "0600"
+      become: true

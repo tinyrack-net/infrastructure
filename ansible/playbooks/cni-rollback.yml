@@ -1,0 +1,178 @@
+---
+- name: Roll back the single-node Tinyrack K3s cluster to Flannel
+  hosts: k3s_servers
+  gather_facts: false
+  become: false
+  vars:
+    cni_rollback_backup_config_path: /var/lib/rancher/k3s/server/cni-migration/config.yaml.pre-cilium
+    cni_rollback_debug_binary: /tmp/tinyrack-cilium-dbg
+
+  pre_tasks:
+    - name: Require the Tinyrack become password
+      ansible.builtin.assert:
+        that:
+          - ansible_become_password is defined
+          - ansible_become_password != "CHANGE_ME"
+
+    - name: Inspect the pre-Cilium K3s configuration backup
+      ansible.builtin.stat:
+        path: "{{ cni_rollback_backup_config_path }}"
+      become: true
+      register: cni_rollback_backup
+
+    - name: Require the pre-Cilium K3s configuration backup
+      ansible.builtin.assert:
+        that: cni_rollback_backup.stat.exists
+        fail_msg: The pre-Cilium K3s configuration backup is missing.
+
+  tasks:
+    - name: Cordon the K3s node during rollback
+      ansible.builtin.command:
+        argv: [kubectl, --context, tinyrack, cordon, tinyrack]
+      delegate_to: localhost
+      register: cni_rollback_cordon
+      changed_when: "'cordoned' in cni_rollback_cordon.stdout"
+
+    - name: Suspend infrastructure reconciliation during rollback
+      ansible.builtin.command:
+        argv: [flux, --context, tinyrack, suspend, kustomization, infrastructure-production]
+      delegate_to: localhost
+      changed_when: true
+
+    - name: Suspend the Cilium Flux objects
+      ansible.builtin.command:
+        argv:
+          - flux
+          - --context
+          - tinyrack
+          - suspend
+          - "{{ item.kind }}"
+          - "{{ item.name }}"
+          - --namespace
+          - "{{ item.namespace }}"
+      delegate_to: localhost
+      loop:
+        - kind: kustomization
+          name: cilium
+          namespace: flux-system
+        - kind: helmrelease
+          name: cilium
+          namespace: kube-system
+      changed_when: true
+
+    - name: Find the Cilium agent Pod
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - tinyrack
+          - --namespace
+          - kube-system
+          - get
+          - pod
+          - --selector=k8s-app=cilium
+          - --output=jsonpath={.items[0].metadata.name}
+      delegate_to: localhost
+      register: cni_rollback_cilium_pod
+      changed_when: false
+
+    - name: Copy the Cilium cleanup binary locally
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - tinyrack
+          - --namespace
+          - kube-system
+          - cp
+          - "{{ cni_rollback_cilium_pod.stdout }}:/usr/bin/cilium-dbg"
+          - "{{ cni_rollback_debug_binary }}"
+      delegate_to: localhost
+      changed_when: true
+
+    - name: Install the temporary Cilium cleanup binary on the host
+      ansible.builtin.copy:
+        src: "{{ cni_rollback_debug_binary }}"
+        dest: /usr/local/src/cilium-dbg-cleanup
+        owner: root
+        group: root
+        mode: "0755"
+      become: true
+
+    - name: List Cilium-networked Pods before rollback
+      ansible.builtin.command:
+        argv: [kubectl, --context, tinyrack, get, pods, --all-namespaces, --output=json]
+      delegate_to: localhost
+      register: cni_rollback_pods
+      changed_when: false
+
+    - name: Remove the Cilium Helm release
+      ansible.builtin.command:
+        argv: [helm, --kube-context, tinyrack, uninstall, cilium, --namespace, kube-system, --wait]
+      delegate_to: localhost
+      changed_when: true
+
+    - name: Clean Cilium state from the host
+      ansible.builtin.command:
+        argv: [/usr/local/src/cilium-dbg-cleanup, post-uninstall-cleanup, --all-state, --force]
+      become: true
+      changed_when: true
+
+    - name: Restore the pre-Cilium K3s configuration
+      ansible.builtin.copy:
+        src: "{{ cni_rollback_backup_config_path }}"
+        dest: /etc/rancher/k3s/config.yaml
+        remote_src: true
+        owner: root
+        group: root
+        mode: "0600"
+      become: true
+
+    - name: Restart K3s with Flannel enabled
+      ansible.builtin.systemd_service:
+        name: k3s.service
+        state: restarted
+      become: true
+
+    - name: Wait for Flannel to recreate its CNI configuration
+      ansible.builtin.wait_for:
+        path: /var/lib/rancher/k3s/agent/etc/cni/net.d/10-flannel.conflist
+        timeout: 300
+      become: true
+
+    - name: Recreate non-host-network Pods under Flannel
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - tinyrack
+          - delete
+          - pod
+          - --namespace
+          - "{{ item.metadata.namespace }}"
+          - "{{ item.metadata.name }}"
+          - --wait=false
+      delegate_to: localhost
+      loop: "{{ (cni_rollback_pods.stdout | from_json)['items'] }}"
+      loop_control:
+        label: "{{ item.metadata.namespace }}/{{ item.metadata.name }}"
+      when: not (item.spec.hostNetwork | default(false) | bool)
+      changed_when: true
+      failed_when: false
+
+    - name: Uncordon the K3s node
+      ansible.builtin.command:
+        argv: [kubectl, --context, tinyrack, uncordon, tinyrack]
+      delegate_to: localhost
+      register: cni_rollback_uncordon
+      changed_when: "'uncordoned' in cni_rollback_uncordon.stdout"
+
+    - name: Remove the migration marker
+      ansible.builtin.file:
+        path: /etc/rancher/k3s/cilium-migrated
+        state: absent
+      become: true
+
+    - name: Require GitOps revert before reconciliation resumes
+      ansible.builtin.debug:
+        msg: Revert and push the Cilium GitOps resources before resuming infrastructure-production.

@@ -16,12 +16,15 @@
       - setup_k3s_server_cluster_cidr != setup_k3s_server_service_cidr
       - setup_k3s_server_tls_sans | length > 0
       - setup_k3s_server_disabled_components == ["traefik"]
+      - setup_k3s_server_flannel_backend == "none"
+      - setup_k3s_server_disable_network_policy | bool
+      - setup_k3s_server_disable_kube_proxy | bool
       - setup_k3s_server_resolver_nameservers | length > 0
       - >-
         ['fs.inotify.max_queued_events', 'fs.inotify.max_user_instances', 'fs.inotify.max_user_watches']
         | difference(setup_k3s_server_inotify_settings.keys() | list)
         | length == 0
-    fail_msg: The pinned K3s version, network ranges, TLS SANs, and host settings are required.
+    fail_msg: The pinned K3s version, network ranges, TLS SANs, Cilium settings, and host settings are required.
 
 - name: Inspect the K3s executable during preflight
   ansible.builtin.stat:
@@ -48,15 +51,6 @@
         else ''
       }}
 
-- name: Refuse Cilium-only flags in the existing K3s systemd unit
-  ansible.builtin.assert:
-    that:
-      - "'--flannel-backend=none' not in setup_k3s_server_existing_service_unit"
-      - "'--disable-network-policy' not in setup_k3s_server_existing_service_unit"
-      - "'--disable-kube-proxy' not in setup_k3s_server_existing_service_unit"
-      - "'servicelb' not in setup_k3s_server_existing_service_unit"
-    fail_msg: The existing K3s unit disables networking components required by this Flannel cluster.
-
 - name: Inspect the existing K3s configuration during preflight
   ansible.builtin.stat:
     path: "{{ setup_k3s_server_config_path }}"
@@ -77,13 +71,42 @@
         else {}
       }}
 
-- name: Refuse Cilium-only flags in the existing K3s configuration
+- name: Detect the existing K3s network mode
+  ansible.builtin.set_fact:
+    setup_k3s_server_existing_flannel_disabled: >-
+      {{
+        '--flannel-backend=none' in setup_k3s_server_existing_service_unit
+        or setup_k3s_server_preflight_config['flannel-backend'] | default('vxlan') == 'none'
+      }}
+    setup_k3s_server_existing_network_policy_disabled: >-
+      {{
+        '--disable-network-policy' in setup_k3s_server_existing_service_unit
+        or setup_k3s_server_preflight_config['disable-network-policy'] | default(false) | bool
+      }}
+    setup_k3s_server_existing_kube_proxy_disabled: >-
+      {{
+        '--disable-kube-proxy' in setup_k3s_server_existing_service_unit
+        or setup_k3s_server_preflight_config['disable-kube-proxy'] | default(false) | bool
+      }}
+
+- name: Require a complete Flannel or Cilium network mode
   ansible.builtin.assert:
     that:
-      - setup_k3s_server_preflight_config['flannel-backend'] | default('vxlan') != 'none'
-      - not (setup_k3s_server_preflight_config['disable-network-policy'] | default(false) | bool)
-      - not (setup_k3s_server_preflight_config['disable-kube-proxy'] | default(false) | bool)
-    fail_msg: The existing K3s configuration disables networking components required by this Flannel cluster.
+      - >-
+        (
+          not (setup_k3s_server_existing_flannel_disabled | bool)
+          and not (setup_k3s_server_existing_network_policy_disabled | bool)
+          and not (setup_k3s_server_existing_kube_proxy_disabled | bool)
+        )
+        or
+        (
+          setup_k3s_server_existing_flannel_disabled | bool
+          and setup_k3s_server_existing_network_policy_disabled | bool
+          and setup_k3s_server_existing_kube_proxy_disabled | bool
+        )
+      - "'servicelb' not in setup_k3s_server_existing_service_unit"
+      - "'servicelb' not in (setup_k3s_server_preflight_config.disable | default([]))"
+    fail_msg: K3s is in a partial CNI transition state or ServiceLB is disabled.
 
 - name: Read the existing node Pod CIDR
   ansible.builtin.command:

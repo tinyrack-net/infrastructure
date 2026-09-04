@@ -1,0 +1,74 @@
+---
+- name: Run Cilium preflight checks
+  ansible.builtin.import_tasks: preflight.yml
+
+- name: Inspect the Flux Cilium HelmRelease
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ setup_cilium_kube_context }}"
+      - --namespace
+      - "{{ setup_cilium_namespace }}"
+      - get
+      - helmrelease
+      - "{{ setup_cilium_flux_helm_release_name }}"
+  delegate_to: localhost
+  become: false
+  register: setup_cilium_flux_release
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Bootstrap the pinned Cilium Helm release before Flux
+  ansible.builtin.command:
+    argv:
+      - helm
+      - --kube-context
+      - "{{ setup_cilium_kube_context }}"
+      - upgrade
+      - --install
+      - "{{ setup_cilium_release_name }}"
+      - "{{ setup_cilium_chart }}"
+      - --version
+      - "{{ setup_cilium_version }}"
+      - --namespace
+      - "{{ setup_cilium_namespace }}"
+      - --values
+      - "{{ setup_cilium_values_path }}"
+      - --wait
+      - --timeout
+      - "{{ setup_cilium_ready_timeout }}"
+  delegate_to: localhost
+  become: false
+  when:
+    - setup_cilium_flux_release.rc != 0
+    - not ansible_check_mode
+  changed_when: true
+
+- name: Report a pending Cilium bootstrap in check mode
+  ansible.builtin.debug:
+    msg: Cilium would be bootstrapped because no Flux HelmRelease exists.
+  when:
+    - setup_cilium_flux_release.rc != 0
+    - ansible_check_mode
+  changed_when: true
+
+- name: Wait for Flux to manage Cilium when its HelmRelease exists
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ setup_cilium_kube_context }}"
+      - --namespace
+      - "{{ setup_cilium_namespace }}"
+      - wait
+      - helmrelease
+      - "{{ setup_cilium_flux_helm_release_name }}"
+      - --for=condition=Ready
+      - "--timeout={{ setup_cilium_ready_timeout }}"
+  delegate_to: localhost
+  become: false
+  when: setup_cilium_flux_release.rc == 0
+  changed_when: false
+  check_mode: false

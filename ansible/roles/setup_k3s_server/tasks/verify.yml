@@ -110,10 +110,12 @@
   register: setup_k3s_server_service_lb_daemon_sets
   changed_when: false
 
-- name: Inspect the Flannel interface
+- name: Confirm the Flannel interface is absent
   ansible.builtin.command:
     argv: [/usr/sbin/ip, link, show, dev, flannel.1]
+  register: setup_k3s_server_flannel_interface
   changed_when: false
+  failed_when: false
 
 - name: Decode the verified K3s state
   ansible.builtin.set_fact:
@@ -140,12 +142,18 @@
         setup_k3s_server_verified_config["service-cidr"] | default('') == setup_k3s_server_service_cidr
         or ('--service-cidr=' ~ setup_k3s_server_service_cidr) in setup_k3s_server_existing_service_unit
       - setup_k3s_server_verified_config.disable == setup_k3s_server_disabled_components
-      - "'--flannel-backend=none' not in setup_k3s_server_existing_service_unit"
-      - not (setup_k3s_server_verified_config["disable-network-policy"] | default(false) | bool)
-      - not (setup_k3s_server_verified_config["disable-kube-proxy"] | default(false) | bool)
-      - "'--disable-network-policy' not in setup_k3s_server_existing_service_unit"
-      - "'--disable-kube-proxy' not in setup_k3s_server_existing_service_unit"
+      - >-
+        setup_k3s_server_verified_config["flannel-backend"] | default('')
+        == setup_k3s_server_flannel_backend
+        or '--flannel-backend=none' in setup_k3s_server_existing_service_unit
+      - >-
+        setup_k3s_server_verified_config["disable-network-policy"] | default(false) | bool
+        or '--disable-network-policy' in setup_k3s_server_existing_service_unit
+      - >-
+        setup_k3s_server_verified_config["disable-kube-proxy"] | default(false) | bool
+        or '--disable-kube-proxy' in setup_k3s_server_existing_service_unit
       - "'servicelb' not in setup_k3s_server_existing_service_unit"
+      - setup_k3s_server_flannel_interface.rc != 0
       - >-
         setup_k3s_server_verified_load_balancer_services['items']
         | selectattr('spec.type', 'equalto', 'LoadBalancer')

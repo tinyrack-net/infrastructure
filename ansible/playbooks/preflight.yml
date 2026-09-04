@@ -12,6 +12,13 @@
         apply:
           become: true
 
+    - name: Run Cilium preflight checks
+      ansible.builtin.include_role:
+        name: setup_cilium
+        tasks_from: preflight
+        apply:
+          become: true
+
     - name: Validate the Sealed Secrets recovery key
       ansible.builtin.include_role:
         name: restore_sealed_secrets_key

@@ -7,6 +7,9 @@ setup_k3s_server_tls_sans:
   - tinyrack.time-inconnu.ts.net
 setup_k3s_server_disabled_components:
   - traefik
+setup_k3s_server_flannel_backend: none
+setup_k3s_server_disable_network_policy: true
+setup_k3s_server_disable_kube_proxy: true
 setup_k3s_server_inotify_settings:
   fs.inotify.max_queued_events: 32768
   fs.inotify.max_user_instances: 8192

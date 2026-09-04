@@ -43,7 +43,7 @@ flowchart TB
 
 # 인프라 구성
 
-- [Flannel](https://github.com/flannel-io/flannel): 클러스터 네트워크 관리(CNI)
+- [Cilium](https://cilium.io/): eBPF 기반 클러스터 네트워크와 네트워크 정책 관리(CNI)
 - [CoreDNS](https://coredns.io/): 클러스터 DNS 서버 관리
 - [etcd](https://etcd.io/): 클러스터 데이터베이스 관리
 - [Cloudflare](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/): 클라우드플레어 터널 연결, 로드 밸런싱
@@ -72,7 +72,7 @@ flowchart TB
 
 # 재해 복구
 
-교체 머신에는 Ubuntu 24.04 amd64, SSH 사용자, Tailscale 연결을 먼저 준비해요. Ansible은 이 연결을 사용해 K3S 호스트 패키지와 커널 설정, Flannel 기반 단일 서버, Sealed Secrets 복구 키까지 구성해요. 호스트명, Tailscale 로그인, OS 업그레이드는 관리하지 않아요.
+교체 머신에는 Ubuntu 24.04 amd64, SSH 사용자, Tailscale 연결을 먼저 준비해요. Ansible은 이 연결을 사용해 K3S 호스트 패키지와 커널 설정, Cilium 기반 단일 서버, Sealed Secrets 복구 키까지 구성해요. 호스트명, Tailscale 로그인, OS 업그레이드는 관리하지 않아요.
 
 Vault 비밀번호와 평문 시크릿은 Git에 커밋하지 않아요. `make vault-edit`에서 `vault_tinyrack_become_password`와 `vault_sealed_secrets_tls_key`를 실제 값으로 바꿔요. Sealed Secrets 키는 `tinyrack-production-key` 하나로 고정하며 controller의 자동 키 갱신은 비활성화해요.
 
@@ -102,10 +102,12 @@ cd ..
 - embedded etcd 단일 서버
 - Pod CIDR `10.55.0.0/16`, Service CIDR `10.56.0.0/16`
 - TLS SAN `100.65.57.48`, `tinyrack.time-inconnu.ts.net`
-- Flannel, kube-proxy, ServiceLB 활성화
+- Cilium CNI와 eBPF kube-proxy replacement 활성화
+- K3S ServiceLB 활성화
+- Flannel과 K3S 내장 네트워크 정책 컨트롤러 비활성화
 - K3S 내장 Traefik 비활성화
 
-기존 클러스터의 CIDR이 다르면 Ansible은 변경하지 않고 중단해요. 두 번째 apply는 `changed=0`이어야 하며, verify는 K3S와 호스트 설정 및 Vault와 일치하는 단일 Sealed Secrets 키를 확인해요. 기존 키가 다르거나 추가 active 키가 있으면 자동으로 덮어쓰거나 삭제하지 않고 중단해요.
+기존 클러스터의 CIDR이 다르면 Ansible은 변경하지 않고 중단해요. Cilium은 Ansible이 먼저 Helm으로 설치하고 Flux가 같은 릴리스와 values를 인수해요. 두 번째 apply는 `changed=0`이어야 하며, verify는 K3S, Cilium, 호스트 설정 및 Vault와 일치하는 단일 Sealed Secrets 키를 확인해요. 기존 키가 다르거나 추가 active 키가 있으면 자동으로 덮어쓰거나 삭제하지 않고 중단해요.
 
 ## Flux 연동 및 인프라 복원
 

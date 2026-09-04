@@ -58,6 +58,9 @@
         setup_k3s_server_existing_config
         | combine({'kubelet-arg': setup_k3s_server_managed_kubelet_args})
         | combine({'disable': setup_k3s_server_disabled_components})
+        | combine({'flannel-backend': setup_k3s_server_flannel_backend})
+        | combine({'disable-network-policy': setup_k3s_server_disable_network_policy})
+        | combine({'disable-kube-proxy': setup_k3s_server_disable_kube_proxy})
         | combine(
             {'cluster-init': true}
             if '--cluster-init' not in setup_k3s_server_existing_service_unit

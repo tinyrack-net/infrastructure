@@ -1,0 +1,89 @@
+---
+- name: Run Cilium preflight checks before verification
+  ansible.builtin.import_tasks: preflight.yml
+
+- name: Wait for the Cilium agent
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ setup_cilium_kube_context }}"
+      - --namespace
+      - "{{ setup_cilium_namespace }}"
+      - rollout
+      - status
+      - daemonset/cilium
+      - "--timeout={{ setup_cilium_ready_timeout }}"
+  delegate_to: localhost
+  become: false
+  changed_when: false
+
+- name: Wait for the Cilium operator
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ setup_cilium_kube_context }}"
+      - --namespace
+      - "{{ setup_cilium_namespace }}"
+      - rollout
+      - status
+      - deployment/cilium-operator
+      - "--timeout={{ setup_cilium_ready_timeout }}"
+  delegate_to: localhost
+  become: false
+  changed_when: false
+
+- name: Query Cilium status
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ setup_cilium_kube_context }}"
+      - --namespace
+      - "{{ setup_cilium_namespace }}"
+      - exec
+      - daemonset/cilium
+      - --
+      - cilium-dbg
+      - status
+      - --brief
+  delegate_to: localhost
+  become: false
+  register: setup_cilium_status
+  changed_when: false
+
+- name: Read the installed Cilium values
+  ansible.builtin.command:
+    argv:
+      - helm
+      - --kube-context
+      - "{{ setup_cilium_kube_context }}"
+      - get
+      - values
+      - "{{ setup_cilium_release_name }}"
+      - --namespace
+      - "{{ setup_cilium_namespace }}"
+      - --output
+      - json
+  delegate_to: localhost
+  become: false
+  register: setup_cilium_installed_values
+  changed_when: false
+
+- name: Inspect the Cilium CNI configuration
+  ansible.builtin.stat:
+    path: "{{ setup_cilium_cni_config_path }}"
+  register: setup_cilium_cni_config
+
+- name: Verify the Cilium datapath and installed values
+  ansible.builtin.assert:
+    that:
+      - setup_cilium_status.stdout | trim == "OK"
+      - setup_cilium_cni_config.stat.exists
+      - (setup_cilium_installed_values.stdout | from_json).kubeProxyReplacement | bool
+      - (setup_cilium_installed_values.stdout | from_json).bpf.masquerade | bool
+      - (setup_cilium_installed_values.stdout | from_json).cni.confPath == setup_cilium_cni_config_path | dirname
+      - (setup_cilium_installed_values.stdout | from_json).devices == setup_cilium_device
+      - not ((setup_cilium_installed_values.stdout | from_json).hubble.enabled | bool)
+    fail_msg: Cilium or kube-proxy replacement is not healthy.

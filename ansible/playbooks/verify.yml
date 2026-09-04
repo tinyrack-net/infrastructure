@@ -20,6 +20,13 @@
         apply:
           become: true
 
+    - name: Verify Cilium
+      ansible.builtin.include_role:
+        name: setup_cilium
+        tasks_from: verify
+        apply:
+          become: true
+
     - name: Verify the Sealed Secrets recovery key
       ansible.builtin.include_role:
         name: restore_sealed_secrets_key

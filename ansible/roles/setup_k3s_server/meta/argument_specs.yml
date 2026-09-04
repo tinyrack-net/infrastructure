@@ -1,7 +1,7 @@
 ---
 argument_specs:
   main:
-    short_description: Configure a single-node K3s server using Flannel
+    short_description: Configure a single-node K3s server for Cilium
     options:
       setup_k3s_server_version:
         type: str
@@ -19,6 +19,15 @@ argument_specs:
       setup_k3s_server_disabled_components:
         type: list
         elements: str
+        required: true
+      setup_k3s_server_flannel_backend:
+        type: str
+        required: true
+      setup_k3s_server_disable_network_policy:
+        type: bool
+        required: true
+      setup_k3s_server_disable_kube_proxy:
+        type: bool
         required: true
       setup_k3s_server_inotify_settings:
         type: dict
