@@ -9,14 +9,6 @@ spec:
       io.cilium.k8s.namespace.labels.networking.tinyrack.net/isolation: enabled
       app.kubernetes.io/name: traefik
   ingress:
-    - fromEntities:
-        - world
-      toPorts:
-        - ports:
-            - port: "8000"
-              protocol: TCP
-            - port: "8443"
-              protocol: TCP
     - fromEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: cloudflared-system

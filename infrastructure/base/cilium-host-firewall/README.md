@@ -1,8 +1,10 @@
 # Cilium host firewall operations
 
-The policy in this directory protects the public `eth0` interface. SSH and the
-Kubernetes API remain available through Tailscale and are intentionally not
-allowed from the public internet.
+The policy in this directory protects the public `eth0` interface. It permits
+no public TCP ingress, including ports 80 and 443. SSH and the Kubernetes API
+remain available through Tailscale. Public applications are reachable only
+through the outbound Cloudflare Tunnel, which connects to Traefik on port 8443
+under a separate pod-to-pod Cilium policy.
 
 Before changing the policy, identify the endpoint with identity
 `reserved:host`, enable `PolicyAuditMode`, and observe policy verdicts with

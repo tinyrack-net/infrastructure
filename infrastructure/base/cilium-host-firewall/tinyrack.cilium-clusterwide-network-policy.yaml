@@ -29,14 +29,6 @@ spec:
               protocol: TCP
     - fromEntities:
         - world
-      toPorts:
-        - ports:
-            - port: "80"
-              protocol: TCP
-            - port: "443"
-              protocol: TCP
-    - fromEntities:
-        - world
       icmps:
         - fields:
             - family: IPv4
