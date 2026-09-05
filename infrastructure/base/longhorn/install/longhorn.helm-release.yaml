@@ -15,18 +15,10 @@ spec:
   interval: 5m
   timeout: 5m
   releaseName: longhorn
-  values:
-    persistence:
-      defaultClass: true
-    longhornUI:
-      replicas: 1
-    defaultSettings:
-      storageMinimalAvailablePercentage: 5
-      defaultReplicaCount: 1
-      concurrentAutomaticEngineUpgradePerNodeLimit: 0
-    defaultBackupStore:
-      backupTarget: s3://tinyrack-prod@hetzner/longhorn
-      backupTargetCredentialSecret: tinyrack-s3-secret
+  valuesFrom:
+    - kind: ConfigMap
+      name: longhorn-values
+      valuesKey: values.yaml
 #    ingress:
 #      enabled: true
 #      host: longhorn.internal.tinyrack.net

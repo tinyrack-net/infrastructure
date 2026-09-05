@@ -4,3 +4,12 @@ resources:
   - tailscale.namespace.yaml
   - tailscale.secret.yaml
   - tailscale.helm-release.yaml
+configMapGenerator:
+  - name: tailscale-values
+    namespace: tailscale
+    files:
+      - values.yaml=tailscale.values.yaml
+    options:
+      disableNameSuffixHash: true
+      labels:
+        reconcile.fluxcd.io/watch: Enabled

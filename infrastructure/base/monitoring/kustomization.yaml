@@ -7,3 +7,26 @@ resources:
   - monitoring.alloy.helm-release.yaml
   - monitoring.cilium-network-policy.yaml
   - monitoring.telemetry.secret.yaml
+configMapGenerator:
+  - name: monitoring-alloy-config
+    namespace: monitoring-system
+    files:
+      - config.alloy=monitoring.alloy.config.alloy
+    options:
+      disableNameSuffixHash: true
+  - name: monitoring-alloy-values
+    namespace: monitoring-system
+    files:
+      - values.yaml=monitoring.alloy.values.yaml
+    options:
+      disableNameSuffixHash: true
+      labels:
+        reconcile.fluxcd.io/watch: Enabled
+  - name: monitoring-kube-state-metrics-values
+    namespace: monitoring-system
+    files:
+      - values.yaml=monitoring.kube-state-metrics.values.yaml
+    options:
+      disableNameSuffixHash: true
+      labels:
+        reconcile.fluxcd.io/watch: Enabled

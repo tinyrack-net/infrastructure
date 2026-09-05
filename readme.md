@@ -149,6 +149,20 @@ flux bootstrap github \
 
 # 기타
 
+## 설정 파일 규칙
+
+- HelmRelease에는 차트 수명주기만 두고 차트 설정은 같은 디렉터리의
+  `<component>.values.yaml`을 `spec.valuesFrom`으로 불러와요.
+- Helm values ConfigMap은 안정된 이름, `values.yaml` 데이터 키,
+  `reconcile.fluxcd.io/watch: Enabled` 라벨을 사용해요.
+- 애플리케이션 고유 YAML, TOML, JSON, ENV와 Alloy River 설정은 소유
+  컴포넌트 이름의 파일로 관리해요. Pod가 직접 참조하는 ConfigMap에는
+  기본 이름 해시를 유지해 설정 변경 시 Pod가 자동 롤아웃되게 해요.
+- Helm values와 Alloy의 동적 reload용 외부 ConfigMap처럼 안정된 이름이
+  필요한 경우에만 이름 해시를 꺼요.
+- 자격 증명은 values나 설정 파일에 두지 않고 기존 Secret 참조 또는
+  암호화된 SealedSecret 매니페스트로 유지해요.
+
 ## 암호화
 
 저장소에는 시크릿 생성을 위한 Sealed Secrets 의 공개 키가 포함되어 있어요.

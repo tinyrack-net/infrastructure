@@ -17,9 +17,7 @@ spec:
   releaseName: mariadb-operator-crds
   install:
     crds: CreateReplace
-  values:
-    webhook:
-      cert:
-        certManager:
-          enabled: true
-  
+  valuesFrom:
+    - kind: ConfigMap
+      name: mariadb-operator-crds-values
+      valuesKey: values.yaml

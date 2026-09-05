@@ -19,12 +19,7 @@ spec:
   interval: 5m
   timeout: 10m
   releaseName: kyverno
-  values:
-    admissionController:
-      replicas: 1
-    backgroundController:
-      enabled: false
-    cleanupController:
-      replicas: 1
-    reportsController:
-      enabled: false
+  valuesFrom:
+    - kind: ConfigMap
+      name: kyverno-values
+      valuesKey: values.yaml

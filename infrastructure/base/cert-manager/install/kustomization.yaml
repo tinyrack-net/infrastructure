@@ -4,3 +4,12 @@ resources:
   - cert-manager.namespace.yaml
   - cert-manager.cloudflare.api-token.secret.yaml
   - cert-manager.helm-release.yaml
+configMapGenerator:
+  - name: cert-manager-values
+    namespace: cert-manager-system
+    files:
+      - values.yaml=cert-manager.values.yaml
+    options:
+      disableNameSuffixHash: true
+      labels:
+        reconcile.fluxcd.io/watch: Enabled

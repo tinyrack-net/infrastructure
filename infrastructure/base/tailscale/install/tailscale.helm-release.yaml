@@ -13,9 +13,6 @@ spec:
         name: tailscale
         namespace: flux-system
       version: "1.102.3"
-  values:
-    apiServerProxyConfig:
-      mode: "noauth"
   valuesFrom:
     - kind: Secret
       name: tailscale-oauth-secret
@@ -25,3 +22,6 @@ spec:
       name: tailscale-oauth-secret
       valuesKey: CLIENT_SECRET
       targetPath: oauth.clientSecret
+    - kind: ConfigMap
+      name: tailscale-values
+      valuesKey: values.yaml

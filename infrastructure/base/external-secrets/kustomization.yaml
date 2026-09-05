@@ -3,3 +3,12 @@ kind: Kustomization
 resources:
   - external-secrets.namespace.yaml
   - external-secrets.helm-release.yaml
+configMapGenerator:
+  - name: external-secrets-values
+    namespace: external-secrets-system
+    files:
+      - values.yaml=external-secrets.values.yaml
+    options:
+      disableNameSuffixHash: true
+      labels:
+        reconcile.fluxcd.io/watch: Enabled

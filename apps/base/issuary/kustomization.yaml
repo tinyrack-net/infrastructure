@@ -6,8 +6,12 @@ resources:
   - issuary.database.user.secret.yaml
   - issuary.secrets.yaml
   - issuary.database.yaml
-  - issuary.config-map.yaml
   - issuary.deployment.yaml
   - issuary.service.yaml
   - issuary.ingress.yaml
   - issuary.cilium-network-policy.yaml
+configMapGenerator:
+  - name: issuary-config
+    namespace: issuary-system
+    files:
+      - config.yaml=issuary.config.yaml

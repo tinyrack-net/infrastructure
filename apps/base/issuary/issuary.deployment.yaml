@@ -10,8 +10,6 @@ spec:
       app: issuary
   template:
     metadata:
-      annotations:
-        issuary.tinyrack.net/config-revision: frontend-ssr-v1-20260903
       labels:
         app: issuary
     spec:

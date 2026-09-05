@@ -1,0 +1,8 @@
+admissionController:
+  replicas: 1
+backgroundController:
+  enabled: false
+cleanupController:
+  replicas: 1
+reportsController:
+  enabled: false

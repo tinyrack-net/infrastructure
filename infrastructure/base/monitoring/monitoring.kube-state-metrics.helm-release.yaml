@@ -15,14 +15,7 @@ spec:
         kind: HelmRepository
         name: prometheus-community-repository
         namespace: flux-system
-  values:
-    prometheus:
-      monitor:
-        enabled: false
-    resources:
-      requests:
-        cpu: 25m
-        memory: 64Mi
-      limits:
-        cpu: 200m
-        memory: 192Mi
+  valuesFrom:
+    - kind: ConfigMap
+      name: monitoring-kube-state-metrics-values
+      valuesKey: values.yaml

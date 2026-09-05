@@ -5,3 +5,12 @@ resources:
   - longhorn.helm-release.yaml
   - longhorn.rwx.storage-class.yaml
   - longhorn.strict-local.storage-class.yaml
+configMapGenerator:
+  - name: longhorn-values
+    namespace: longhorn-system
+    files:
+      - values.yaml=longhorn.values.yaml
+    options:
+      disableNameSuffixHash: true
+      labels:
+        reconcile.fluxcd.io/watch: Enabled

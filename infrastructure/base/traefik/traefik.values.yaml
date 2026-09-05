@@ -1,0 +1,32 @@
+providers:
+  kubernetesCRD:
+    allowExternalNameServices: true
+  kubernetesIngress:
+    allowExternalNameServices: true
+deployment:
+  replicas: 2
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9100"
+    prometheus.io/path: /metrics
+accessLog:
+  enabled: true
+  format: json
+  fields:
+    defaultMode: keep
+    headers:
+      defaultMode: drop
+      names:
+        traceparent: keep
+    queryParameters:
+      defaultMode: drop
+tracing:
+  serviceName: traefik
+  sampleRate: 0.1
+  resourceAttributes:
+    cluster: tinyrack
+  otlp:
+    enabled: true
+    http:
+      enabled: true
+      endpoint: http://monitoring-alloy.monitoring-system.svc:4318/v1/traces
