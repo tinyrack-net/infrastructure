@@ -106,6 +106,10 @@ spec:
               replacement   = "kubernetes.default.svc:443"
             }
             rule {
+              target_label = "__scheme__"
+              replacement  = "https"
+            }
+            rule {
               source_labels = ["__meta_kubernetes_node_name"]
               target_label  = "instance"
             }
@@ -124,6 +128,10 @@ spec:
               source_labels = ["__meta_kubernetes_node_name"]
               target_label  = "__address__"
               replacement   = "kubernetes.default.svc:443"
+            }
+            rule {
+              target_label = "__scheme__"
+              replacement  = "https"
             }
             rule {
               source_labels = ["__meta_kubernetes_node_name"]
