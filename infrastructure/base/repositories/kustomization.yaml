@@ -12,3 +12,5 @@ resources:
   - jetstack.yaml
   - kyverno.yaml
   - ot-container-kit.yaml
+  - grafana.yaml
+  - prometheus-community.yaml

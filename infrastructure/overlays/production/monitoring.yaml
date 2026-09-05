@@ -1,0 +1,19 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: monitoring
+  namespace: flux-system
+spec:
+  interval: 15m
+  path: ./infrastructure/base/monitoring
+  prune: true
+  timeout: 10m
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: infrastructure-repositories
+    - name: sealed-secrets
+    - name: longhorn
+    - name: traefik
