@@ -334,8 +334,8 @@ spec:
 
           otelcol.processor.memory_limiter "traces" {
             check_interval = "1s"
-            limit          = "256MiB"
-            spike_limit    = "64MiB"
+            limit          = "448MiB"
+            spike_limit    = "32MiB"
             output {
               traces = [otelcol.processor.batch.traces.input]
             }
