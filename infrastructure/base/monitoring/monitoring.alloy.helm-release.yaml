@@ -20,6 +20,19 @@ spec:
   values:
     crds:
       create: false
+    rbac:
+      clusterRules:
+        - apiGroups: [""]
+          resources: ["nodes"]
+          verbs: ["get", "list", "watch"]
+        - apiGroups: [""]
+          resources: ["nodes/pods"]
+          verbs: ["get", "list", "watch"]
+        - apiGroups: [""]
+          resources: ["nodes/metrics", "nodes/proxy"]
+          verbs: ["get", "list", "watch"]
+        - nonResourceURLs: ["/metrics"]
+          verbs: ["get"]
     controller:
       type: daemonset
       volumes:
