@@ -58,6 +58,8 @@ spec:
       extraEnv:
         - name: CLUSTER_NAME
           value: tinyrack
+        - name: GOMEMLIMIT
+          value: 256MiB
       extraPorts:
         - name: otlp-http
           port: 4318
