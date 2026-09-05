@@ -111,6 +111,7 @@ spec:
             }
             rule {
               source_labels = ["__meta_kubernetes_node_name"]
+              regex         = "(.+)"
               target_label  = "__metrics_path__"
               replacement   = "/api/v1/nodes/$1/proxy/metrics"
             }
@@ -130,6 +131,7 @@ spec:
             }
             rule {
               source_labels = ["__meta_kubernetes_node_name"]
+              regex         = "(.+)"
               target_label  = "__metrics_path__"
               replacement   = "/api/v1/nodes/$1/proxy/metrics/cadvisor"
             }
@@ -179,23 +181,6 @@ spec:
             forward_to      = [prometheus.relabel.cluster.receiver]
           }
 
-          prometheus.scrape "kubernetes_api" {
-            targets = [{
-              __address__      = "kubernetes.default.svc:443",
-              __scheme__       = "https",
-              __metrics_path__ = "/metrics",
-              job              = "kubernetes-apiserver",
-            }]
-            authorization {
-              credentials_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-            }
-            tls_config {
-              ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-            }
-            scrape_interval = "30s"
-            forward_to      = [prometheus.relabel.cluster.receiver]
-          }
-
           prometheus.scrape "kubelet" {
             targets = discovery.relabel.kubelet.output
             authorization {
@@ -205,7 +190,7 @@ spec:
               ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
             }
             scrape_interval = "30s"
-            forward_to      = [prometheus.relabel.cluster.receiver]
+            forward_to      = [prometheus.relabel.kubelet_metrics.receiver]
           }
 
           prometheus.scrape "cadvisor" {
@@ -217,7 +202,7 @@ spec:
               ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
             }
             scrape_interval = "30s"
-            forward_to      = [prometheus.relabel.cluster.receiver]
+            forward_to      = [prometheus.relabel.cadvisor_metrics.receiver]
           }
 
           prometheus.scrape "annotated_pods" {
@@ -233,6 +218,24 @@ spec:
             }]
             scrape_interval = "30s"
             forward_to      = [prometheus.relabel.cluster.receiver]
+          }
+
+          prometheus.relabel "kubelet_metrics" {
+            rule {
+              source_labels = ["__name__"]
+              regex         = "up|scrape_.*|kubelet_node_name|kubelet_volume_stats_.*|kubelet_runtime_operations_errors_total|kubelet_running_(pods|containers)"
+              action        = "keep"
+            }
+            forward_to = [prometheus.relabel.cluster.receiver]
+          }
+
+          prometheus.relabel "cadvisor_metrics" {
+            rule {
+              source_labels = ["__name__"]
+              regex         = "up|scrape_.*|container_(cpu_usage_seconds_total|memory_working_set_bytes|memory_rss|fs_usage_bytes|fs_limit_bytes|network_receive_bytes_total|network_transmit_bytes_total|network_receive_errors_total|network_transmit_errors_total|last_seen)"
+              action        = "keep"
+            }
+            forward_to = [prometheus.relabel.cluster.receiver]
           }
 
           prometheus.relabel "cluster" {
