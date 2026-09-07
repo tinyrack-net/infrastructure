@@ -27,6 +27,14 @@ spec:
               protocol: UDP
             - port: "10250"
               protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: monitoring-system
+            app.kubernetes.io/name: alloy
+      toPorts:
+        - ports:
+            - port: "9963"
+              protocol: TCP
     - fromEntities:
         - world
       icmps:
