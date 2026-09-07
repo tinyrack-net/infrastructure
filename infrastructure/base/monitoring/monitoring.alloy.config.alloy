@@ -241,7 +241,7 @@ loki.process "kubernetes" {
 
 loki.write "central" {
   endpoint {
-    url = "https://telemetry.winetree94.com/insert/loki/api/v1/push"
+    url = "https://telemetry.winetree94.com/insert/loki/api/v1/push?message_fields_prefix=log.&_msg_field=log._msg,log.record.message,log.message,log.msg,log.log,log.RequestPath"
     basic_auth {
       username = sys.env("TELEMETRY_USERNAME")
       password = sys.env("TELEMETRY_PASSWORD")
