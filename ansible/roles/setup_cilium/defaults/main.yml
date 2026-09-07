@@ -21,6 +21,7 @@ setup_cilium_isolated_namespaces:
   - longhorn-system
   - mariadb-operator-system
   - memos-system
+  - monitoring-system
   - ot-redis-operator-system
   - reflector
   - sealed-secrets
