@@ -5,6 +5,13 @@ metadata:
   namespace: discourse-system
 spec:
   retentionPolicy: 30d
+  instanceSidecarConfiguration:
+    retentionPolicyIntervalSeconds: 3600
+    env:
+      - name: AWS_RETRY_MODE
+        value: standard
+      - name: AWS_MAX_ATTEMPTS
+        value: "10"
   configuration:
     destinationPath: s3://tinyrack-prod/apps/discourse/database-15
     endpointURL: https://fsn1.your-objectstorage.com
