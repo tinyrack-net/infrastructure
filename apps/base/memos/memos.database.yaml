@@ -5,6 +5,13 @@ metadata:
   namespace: memos-system
 spec:
   retentionPolicy: 30d
+  instanceSidecarConfiguration:
+    retentionPolicyIntervalSeconds: 3600
+    env:
+      - name: AWS_RETRY_MODE
+        value: standard
+      - name: AWS_MAX_ATTEMPTS
+        value: "10"
   configuration:
     destinationPath: s3://tinyrack-prod/apps/memos/database
     endpointURL: https://fsn1.your-objectstorage.com
@@ -78,7 +85,7 @@ metadata:
   name: memos-backup
   namespace: memos-system
 spec:
-  schedule: "0 0 */4 * * *"
+  schedule: "0 20 */4 * * *"
   backupOwnerReference: self
   method: plugin
   pluginConfiguration:

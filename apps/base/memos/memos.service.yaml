@@ -8,7 +8,7 @@ spec:
     app: memos
   ports:
     - name: http
-      protocal: TCP
+      protocol: TCP
       port: 80
       targetPort: 5230
     - name: https
