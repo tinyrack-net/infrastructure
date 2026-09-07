@@ -5,6 +5,13 @@ metadata:
   namespace: issuary-system
 spec:
   retentionPolicy: 30d
+  instanceSidecarConfiguration:
+    retentionPolicyIntervalSeconds: 3600
+    env:
+      - name: AWS_RETRY_MODE
+        value: standard
+      - name: AWS_MAX_ATTEMPTS
+        value: "10"
   configuration:
     destinationPath: s3://tinyrack-prod/apps/issuary/database
     endpointURL: https://fsn1.your-objectstorage.com
@@ -73,7 +80,7 @@ metadata:
   name: issuary-backup
   namespace: issuary-system
 spec:
-  schedule: "0 0 */4 * * *"
+  schedule: "0 10 */4 * * *"
   backupOwnerReference: self
   method: plugin
   pluginConfiguration:
