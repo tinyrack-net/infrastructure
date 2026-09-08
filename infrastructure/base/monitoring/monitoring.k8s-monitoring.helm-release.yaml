@@ -35,6 +35,8 @@ spec:
               datapoint:
                 - 'set(attributes["job"], resource.attributes["service.name"]) where resource.attributes["service.name"] != nil'
                 - 'set(attributes["instance"], resource.attributes["service.instance.id"]) where resource.attributes["service.instance.id"] != nil'
+                - 'set(attributes["metrics_path"], "/metrics/cadvisor") where resource.attributes["service.name"] == "kubelet" and IsMatch(metric.name, "^container_")'
+                - 'set(attributes["metrics_path"], "/metrics") where resource.attributes["service.name"] == "kubelet" and not IsMatch(metric.name, "^container_")'
         clusterLabels: [cluster, k8s.cluster.name]
         overwriteClusterLabel: true
         auth:
@@ -101,6 +103,14 @@ spec:
             namespaces: [monitoring-system]
             labelSelectors: {app.kubernetes.io/name: alloy}
     selfReporting: {enabled: true, destinations: [telemetry]}
+    replaceComponent:
+      - type: otelcol.processor.transform
+        name: telemetry_scrape_normalize
+        content: |-
+          error_mode = "ignore"
+          output {
+            metrics = [otelcol.processor.attributes.telemetry.input]
+          }
     collectors:
       alloy:
         fullnameOverride: monitoring-alloy
