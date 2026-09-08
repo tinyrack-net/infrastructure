@@ -146,7 +146,8 @@ discovery.relabel "cadvisor" {
 }
 
 prometheus.scrape "kubelet" {
-	targets = discovery.relabel.kubelet.output
+	targets  = discovery.relabel.kubelet.output
+	job_name = "kubelet"
 
 	authorization {
 		credentials_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -160,7 +161,8 @@ prometheus.scrape "kubelet" {
 }
 
 prometheus.scrape "cadvisor" {
-	targets = discovery.relabel.cadvisor.output
+	targets  = discovery.relabel.cadvisor.output
+	job_name = "kubelet"
 
 	authorization {
 		credentials_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -200,7 +202,8 @@ discovery.relabel "kube_controller_manager" {
 }
 
 prometheus.scrape "kube_controller_manager" {
-	targets = discovery.relabel.kube_controller_manager.output
+	targets  = discovery.relabel.kube_controller_manager.output
+	job_name = "kube-controller-manager"
 
 	authorization {
 		credentials_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -240,7 +243,8 @@ discovery.relabel "kube_scheduler" {
 }
 
 prometheus.scrape "kube_scheduler" {
-	targets = discovery.relabel.kube_scheduler.output
+	targets  = discovery.relabel.kube_scheduler.output
+	job_name = "kube-scheduler"
 
 	authorization {
 		credentials_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -276,6 +280,7 @@ discovery.relabel "etcd" {
 
 prometheus.scrape "etcd" {
 	targets         = discovery.relabel.etcd.output
+	job_name        = "etcd"
 	scrape_interval = "30s"
 	forward_to      = [prometheus.relabel.cluster.receiver]
 }
