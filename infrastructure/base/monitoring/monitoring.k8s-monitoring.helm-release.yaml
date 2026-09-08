@@ -114,6 +114,12 @@ spec:
               `delete_key(attributes, "service.namespace")`,
             ]
           }
+          metric_statements {
+            context = "datapoint"
+            statements = [
+              `delete_key(attributes, "service_namespace")`,
+            ]
+          }
           output {
             metrics = [otelcol.processor.attributes.telemetry.input]
           }
