@@ -39,7 +39,7 @@ alloy:
     - name: CLUSTER_NAME
       value: tinyrack
     - name: GOMEMLIMIT
-      value: 256MiB
+      value: 512MiB
   extraPorts:
     - name: otlp-http
       port: 4318
@@ -52,10 +52,10 @@ alloy:
   resources:
     requests:
       cpu: 50m
-      memory: 128Mi
+      memory: 256Mi
     limits:
       cpu: 500m
-      memory: 512Mi
+      memory: 768Mi
   securityContext:
     allowPrivilegeEscalation: false
     readOnlyRootFilesystem: true
