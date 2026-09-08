@@ -1,0 +1,211 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: monitoring
+  namespace: monitoring-system
+spec:
+  interval: 15m
+  timeout: 10m
+  releaseName: monitoring-k8s
+  chart:
+    spec:
+      chart: k8s-monitoring
+      version: "4.5.0"
+      sourceRef:
+        kind: HelmRepository
+        name: grafana-repository
+        namespace: flux-system
+  values:
+    cluster:
+      name: tinyrack
+    global:
+      scrapeInterval: 30s
+      scrapeTimeout: 10s
+    destinations:
+      telemetry:
+        type: otlp
+        protocol: http
+        url: https://telemetry.winetree94.com
+        metrics: {enabled: true, path: opentelemetry/v1/metrics}
+        logs: {enabled: true, path: insert/opentelemetry/v1/logs}
+        traces: {enabled: true, path: insert/opentelemetry/v1/traces}
+        processors:
+          transform:
+            metrics:
+              datapoint:
+                - 'set(attributes["job"], resource.attributes["service.name"]) where resource.attributes["service.name"] != nil'
+                - 'set(attributes["instance"], resource.attributes["service.instance.id"]) where resource.attributes["service.instance.id"] != nil'
+        clusterLabels: [cluster, k8s.cluster.name]
+        overwriteClusterLabel: true
+        auth:
+          type: bearerToken
+          bearerTokenKey: TELEMETRY_TOKEN
+        secret:
+          create: false
+          name: telemetry-credentials
+          namespace: monitoring-system
+    clusterMetrics:
+      enabled: true
+      collector: alloy
+      destinations: [telemetry]
+      kubelet: {jobLabel: kubelet, metricsTuning: {useDefaultAllowList: false}}
+      kubeletResource: {metricsTuning: {useDefaultAllowList: false}}
+      cadvisor: {jobLabel: kubelet, metricsTuning: {useDefaultAllowList: false}}
+      apiServer: {enabled: true, jobLabel: apiserver, metricsTuning: {useDefaultAllowList: false}}
+      kubeDNS: {enabled: true, jobLabel: coredns, metricsTuning: {useDefaultAllowList: false}}
+      kubeControllerManager: {enabled: false}
+      kubeScheduler: {enabled: false}
+      kubeProxy: {enabled: false}
+      kube-state-metrics: {jobLabel: kube-state-metrics, metricsTuning: {useDefaultAllowList: false}}
+    hostMetrics:
+      enabled: true
+      collector: alloy
+      destinations: [telemetry]
+      linuxHosts:
+        enabled: true
+        source: node-exporter
+        jobLabel: node-exporter
+        metricsTuning: {useDefaultAllowList: false}
+    podLogsViaKubernetesApi: {enabled: true, collector: alloy, destinations: [telemetry]}
+    clusterEvents: {enabled: true, collector: alloy, destinations: [telemetry], jobLabel: kubernetes-events}
+    applicationObservability:
+      enabled: true
+      collector: alloy
+      destinations: [telemetry]
+      receivers:
+        otlp:
+          http: {enabled: true}
+          grpc: {enabled: false}
+      metrics: {enabled: false}
+      logs: {enabled: false}
+      traces: {enabled: true}
+      connectors:
+        grafanaCloudMetrics: {enabled: false}
+      processors:
+        memoryLimiter: {enabled: true, limit: 768MiB}
+    prometheusOperatorObjects:
+      enabled: true
+      collector: alloy
+      destinations: [telemetry]
+      podMonitors: {enabled: false}
+      probes: {enabled: false}
+      scrapeConfigs: {enabled: false}
+      serviceMonitors: {enabled: true}
+    integrations:
+      collector: alloy
+      destinations: [telemetry]
+      alloy:
+        instances:
+          - name: alloy
+            jobLabel: alloy
+            namespaces: [monitoring-system]
+            labelSelectors: {app.kubernetes.io/name: alloy}
+    selfReporting: {enabled: true, destinations: [telemetry]}
+    collectors:
+      alloy:
+        fullnameOverride: monitoring-alloy
+        presets: [singleton, clustered, otel-receiver]
+        includeDestinations: [telemetry]
+        alloy:
+          resources:
+            requests: {cpu: 100m, memory: 256Mi}
+            limits: {cpu: "1", memory: 1Gi}
+        extraConfig: |-
+          discovery.kubernetes "nodes" {
+            role = "node"
+          }
+
+          discovery.relabel "kube_controller_manager" {
+            targets = discovery.kubernetes.nodes.targets
+            rule {
+              source_labels = ["__meta_kubernetes_node_address_InternalIP"]
+              target_label = "__address__"
+              regex = "(.+)"
+              replacement = "$1:10257"
+            }
+            rule {
+              target_label = "__scheme__"
+              replacement  = "https"
+            }
+            rule {
+              source_labels = ["__meta_kubernetes_node_name"]
+              target_label  = "instance"
+            }
+            rule {
+              target_label = "job"
+              replacement  = "kube-controller-manager"
+            }
+          }
+          prometheus.scrape "kube_controller_manager" {
+            targets = discovery.relabel.kube_controller_manager.output
+            job_name = "kube-controller-manager"
+            authorization {
+              credentials_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+            }
+            tls_config {
+              insecure_skip_verify = true
+            }
+            scrape_interval = "30s"
+            forward_to = [otelcol.receiver.prometheus.telemetry.receiver]
+          }
+
+          discovery.relabel "kube_scheduler" {
+            targets = discovery.kubernetes.nodes.targets
+            rule {
+              source_labels = ["__meta_kubernetes_node_address_InternalIP"]
+              target_label = "__address__"
+              regex = "(.+)"
+              replacement = "$1:10259"
+            }
+            rule {
+              target_label = "__scheme__"
+              replacement  = "https"
+            }
+            rule {
+              source_labels = ["__meta_kubernetes_node_name"]
+              target_label  = "instance"
+            }
+            rule {
+              target_label = "job"
+              replacement  = "kube-scheduler"
+            }
+          }
+          prometheus.scrape "kube_scheduler" {
+            targets = discovery.relabel.kube_scheduler.output
+            job_name = "kube-scheduler"
+            authorization {
+              credentials_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+            }
+            tls_config {
+              insecure_skip_verify = true
+            }
+            scrape_interval = "30s"
+            forward_to = [otelcol.receiver.prometheus.telemetry.receiver]
+          }
+
+          discovery.relabel "etcd" {
+            targets = discovery.kubernetes.nodes.targets
+            rule {
+              source_labels = ["__meta_kubernetes_node_address_InternalIP"]
+              target_label = "__address__"
+              regex = "(.+)"
+              replacement = "$1:2381"
+            }
+            rule {
+              source_labels = ["__meta_kubernetes_node_name"]
+              target_label  = "instance"
+            }
+            rule {
+              target_label = "job"
+              replacement  = "etcd"
+            }
+          }
+          prometheus.scrape "etcd" {
+            targets = discovery.relabel.etcd.output
+            job_name = "etcd"
+            scrape_interval = "30s"
+            forward_to = [otelcol.receiver.prometheus.telemetry.receiver]
+          }
+    telemetryServices:
+      kube-state-metrics: {deploy: true}
+      node-exporter: {deploy: true}
