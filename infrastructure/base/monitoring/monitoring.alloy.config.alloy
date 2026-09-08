@@ -309,7 +309,7 @@ prometheus.remote_write "central" {
 
 		queue_config {
 			capacity             = 5000
-			max_shards           = 2
+			max_shards           = 8
 			min_shards           = 1
 			max_samples_per_send = 1000
 		}
