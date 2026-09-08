@@ -108,6 +108,12 @@ spec:
         name: telemetry_scrape_normalize
         content: |-
           error_mode = "ignore"
+          metric_statements {
+            context = "resource"
+            statements = [
+              `delete_key(attributes, "service.namespace")`,
+            ]
+          }
           output {
             metrics = [otelcol.processor.attributes.telemetry.input]
           }
