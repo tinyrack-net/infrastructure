@@ -3,6 +3,12 @@ crds:
 rbac:
   clusterRules:
     - apiGroups: [""]
+      resources: ["services", "endpoints", "pods", "pods/log", "namespaces", "events"]
+      verbs: ["get", "list", "watch"]
+    - apiGroups: ["discovery.k8s.io"]
+      resources: ["endpointslices"]
+      verbs: ["get", "list", "watch"]
+    - apiGroups: [""]
       resources: ["nodes"]
       verbs: ["get", "list", "watch"]
     - apiGroups: [""]

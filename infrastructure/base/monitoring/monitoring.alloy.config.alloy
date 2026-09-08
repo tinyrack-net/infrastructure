@@ -63,7 +63,8 @@ discovery.relabel "annotated_pods" {
 }
 
 prometheus.operator.servicemonitors "default" {
-	forward_to = [prometheus.relabel.cluster.receiver]
+	allow_arbitrary_file_access = true
+	forward_to                  = [prometheus.relabel.cluster.receiver]
 }
 
 prometheus.scrape "annotated_pods" {
