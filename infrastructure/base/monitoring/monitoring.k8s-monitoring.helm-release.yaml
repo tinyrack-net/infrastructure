@@ -82,7 +82,7 @@ spec:
       connectors:
         grafanaCloudMetrics: {enabled: false}
       processors:
-        memoryLimiter: {enabled: true, limit: 768MiB}
+        memoryLimiter: {enabled: true, limit: 1536MiB}
     prometheusOperatorObjects:
       enabled: true
       collector: alloy
@@ -108,8 +108,8 @@ spec:
         includeDestinations: [telemetry]
         alloy:
           resources:
-            requests: {cpu: 100m, memory: 256Mi}
-            limits: {cpu: "1", memory: 1Gi}
+            requests: {cpu: 100m, memory: 512Mi}
+            limits: {cpu: "1", memory: 2Gi}
         extraConfig: |-
           discovery.kubernetes "nodes" {
             role = "node"
