@@ -3,8 +3,10 @@ kind: Kustomization
 resources:
   - monitoring.namespace.yaml
   - monitoring.kube-state-metrics.helm-release.yaml
+  - monitoring.node-exporter.helm-release.yaml
   - monitoring.alloy.pvc.yaml
   - monitoring.alloy.helm-release.yaml
+  - monitoring.service-monitors.yaml
   - monitoring.cilium-network-policy.yaml
   - monitoring.telemetry.secret.yaml
 configMapGenerator:
@@ -26,6 +28,14 @@ configMapGenerator:
     namespace: monitoring-system
     files:
       - values.yaml=monitoring.kube-state-metrics.values.yaml
+    options:
+      disableNameSuffixHash: true
+      labels:
+        reconcile.fluxcd.io/watch: Enabled
+  - name: monitoring-node-exporter-values
+    namespace: monitoring-system
+    files:
+      - values.yaml=monitoring.node-exporter.values.yaml
     options:
       disableNameSuffixHash: true
       labels:

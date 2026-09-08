@@ -2,6 +2,7 @@
 setup_k3s_server_version: v1.36.3+k3s1
 setup_k3s_server_cluster_cidr: 10.55.0.0/16
 setup_k3s_server_service_cidr: 10.56.0.0/16
+setup_k3s_server_metrics_bind_address: "{{ ansible_facts['default_ipv4']['address'] }}"
 setup_k3s_server_tls_sans:
   - 100.65.57.48
   - tinyrack.time-inconnu.ts.net

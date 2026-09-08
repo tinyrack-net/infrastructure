@@ -13,6 +13,9 @@ rbac:
       verbs: ["get", "list", "watch"]
     - nonResourceURLs: ["/metrics"]
       verbs: ["get"]
+    - apiGroups: ["monitoring.coreos.com"]
+      resources: ["servicemonitors"]
+      verbs: ["get", "list", "watch"]
 controller:
   type: daemonset
   volumes:
@@ -20,15 +23,6 @@ controller:
       - name: alloy-data
         persistentVolumeClaim:
           claimName: alloy-data
-      - name: host-proc
-        hostPath:
-          path: /proc
-      - name: host-sys
-        hostPath:
-          path: /sys
-      - name: host-root
-        hostPath:
-          path: /
 alloy:
   enableReporting: false
   storagePath: /var/lib/alloy
@@ -49,15 +43,6 @@ alloy:
     extra:
       - name: alloy-data
         mountPath: /var/lib/alloy
-      - name: host-proc
-        mountPath: /host/proc
-        readOnly: true
-      - name: host-sys
-        mountPath: /host/sys
-        readOnly: true
-      - name: host-root
-        mountPath: /host/root
-        readOnly: true
   resources:
     requests:
       cpu: 50m

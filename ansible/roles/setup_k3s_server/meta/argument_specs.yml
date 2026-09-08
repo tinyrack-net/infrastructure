@@ -12,6 +12,9 @@ argument_specs:
       setup_k3s_server_service_cidr:
         type: str
         required: true
+      setup_k3s_server_metrics_bind_address:
+        type: str
+        required: true
       setup_k3s_server_tls_sans:
         type: list
         elements: str

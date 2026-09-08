@@ -165,6 +165,13 @@
         | selectattr('status', 'equalto', 'True') | list | length == 1
       - "'node-role.kubernetes.io/etcd' in setup_k3s_server_verified_node['items'][0].metadata.labels"
       - "'resolv-conf=' ~ setup_k3s_server_resolver_path in setup_k3s_server_verified_config['kubelet-arg']"
+      - setup_k3s_server_verified_config["etcd-expose-metrics"] | bool
+      - >-
+        'bind-address=' ~ setup_k3s_server_metrics_bind_address in
+        setup_k3s_server_verified_config['kube-controller-manager-arg']
+      - >-
+        'bind-address=' ~ setup_k3s_server_metrics_bind_address in
+        setup_k3s_server_verified_config['kube-scheduler-arg']
       - >-
         setup_k3s_server_resolver_nameservers
         | map('regex_replace', '^', 'nameserver ')

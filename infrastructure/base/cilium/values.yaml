@@ -8,6 +8,12 @@ rollOutCiliumPods: true
 identityAllocationMode: crd
 operator:
   replicas: 1
+  prometheus:
+    enabled: true
+    metricsService: true
+    serviceMonitor:
+      enabled: true
+      jobLabel: app.kubernetes.io/name
 ipam:
   mode: cluster-pool
   operator:
@@ -29,6 +35,13 @@ cni:
 policyEnforcementMode: default
 hostFirewall:
   enabled: true
+prometheus:
+  enabled: true
+  metricsService: true
+  serviceMonitor:
+    enabled: true
+    trustCRDsExist: true
+    jobLabel: app.kubernetes.io/name
 hubble:
   enabled: true
   relay:

@@ -1,20 +1,16 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: monitoring
+  name: prometheus-operator-crds
   namespace: flux-system
 spec:
   interval: 15m
-  path: ./infrastructure/base/monitoring
+  path: ./infrastructure/base/prometheus-operator-crds
   prune: true
-  timeout: 10m
+  timeout: 5m
   wait: true
   sourceRef:
     kind: GitRepository
     name: flux-system
   dependsOn:
     - name: infrastructure-repositories
-    - name: prometheus-operator-crds
-    - name: sealed-secrets
-    - name: longhorn
-    - name: traefik

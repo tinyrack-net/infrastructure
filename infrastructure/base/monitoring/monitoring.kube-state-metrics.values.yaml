@@ -1,6 +1,13 @@
 prometheus:
   monitor:
-    enabled: false
+    enabled: true
+    jobLabel: app.kubernetes.io/name
+    http:
+      interval: 30s
+      relabelings:
+        - action: replace
+          replacement: kube-state-metrics
+          targetLabel: job
 resources:
   requests:
     cpu: 25m

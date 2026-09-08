@@ -33,7 +33,19 @@ spec:
             app.kubernetes.io/name: alloy
       toPorts:
         - ports:
+            - port: "2381"
+              protocol: TCP
+            - port: "9100"
+              protocol: TCP
+            - port: "9962"
+              protocol: TCP
             - port: "9963"
+              protocol: TCP
+            - port: "10250"
+              protocol: TCP
+            - port: "10257"
+              protocol: TCP
+            - port: "10259"
               protocol: TCP
     - fromEntities:
         - world

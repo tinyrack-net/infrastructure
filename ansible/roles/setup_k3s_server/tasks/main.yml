@@ -51,12 +51,30 @@
         + ['resolv-conf=' ~ setup_k3s_server_resolver_path]
       }}
 
+- name: Build the managed control-plane metric arguments
+  ansible.builtin.set_fact:
+    setup_k3s_server_managed_controller_manager_args: >-
+      {{
+        (setup_k3s_server_existing_config['kube-controller-manager-arg'] | default([])
+        | reject('match', '^bind-address=') | list)
+        + ['bind-address=' ~ setup_k3s_server_metrics_bind_address]
+      }}
+    setup_k3s_server_managed_scheduler_args: >-
+      {{
+        (setup_k3s_server_existing_config['kube-scheduler-arg'] | default([])
+        | reject('match', '^bind-address=') | list)
+        + ['bind-address=' ~ setup_k3s_server_metrics_bind_address]
+      }}
+
 - name: Build the managed K3s configuration
   ansible.builtin.set_fact:
     setup_k3s_server_managed_config: >-
       {{
         setup_k3s_server_existing_config
         | combine({'kubelet-arg': setup_k3s_server_managed_kubelet_args})
+        | combine({'kube-controller-manager-arg': setup_k3s_server_managed_controller_manager_args})
+        | combine({'kube-scheduler-arg': setup_k3s_server_managed_scheduler_args})
+        | combine({'etcd-expose-metrics': true})
         | combine({'disable': setup_k3s_server_disabled_components})
         | combine({'flannel-backend': setup_k3s_server_flannel_backend})
         | combine({'disable-network-policy': setup_k3s_server_disable_network_policy})
