@@ -55,8 +55,8 @@ spec:
               datapoint:
                 - 'set(attributes["job"], resource.attributes["service.name"]) where attributes["job"] == nil and resource.attributes["service.name"] != nil'
                 - 'set(attributes["instance"], resource.attributes["service.instance.id"]) where attributes["instance"] == nil and resource.attributes["service.instance.id"] != nil'
-                - 'set(attributes["metrics_path"], "/metrics/cadvisor") where resource.attributes["service.name"] == "kubelet" and IsMatch(metric.name, "^container_")'
-                - 'set(attributes["metrics_path"], "/metrics") where resource.attributes["service.name"] == "kubelet" and not IsMatch(metric.name, "^container_")'
+                - 'set(attributes["metrics_path"], "/metrics/cadvisor") where attributes["metrics_path"] == nil and resource.attributes["service.name"] == "kubelet" and IsMatch(metric.name, "^container_")'
+                - 'set(attributes["metrics_path"], "/metrics") where attributes["metrics_path"] == nil and resource.attributes["service.name"] == "kubelet" and not IsMatch(metric.name, "^container_")'
         clusterLabels: [cluster, k8s.cluster.name]
         overwriteClusterLabel: true
         auth:
@@ -70,10 +70,52 @@ spec:
       enabled: true
       collector: alloy
       destinations: [telemetry]
-      kubelet: {jobLabel: kubelet, metricsTuning: {useDefaultAllowList: false}}
-      kubeletResource: {metricsTuning: {useDefaultAllowList: false}}
-      cadvisor: {jobLabel: kubelet, metricsTuning: {useDefaultAllowList: false}}
-      apiServer: {enabled: true, jobLabel: apiserver, metricsTuning: {useDefaultAllowList: false}}
+      # K3s exposes one shared registry. Scrape /metrics only through kubelet.
+      # Route component families without filtering any series; shared/unknown
+      # families remain under kubelet. cAdvisor/resource and etcd stay separate.
+      kubelet:
+        jobLabel: kubelet
+        metricsTuning:
+          useDefaultAllowList: false
+        extraMetricProcessingRules: |-
+          rule {
+            target_label = "metrics_path"
+            replacement = "/metrics"
+          }
+          rule {
+            source_labels = ["__name__"]
+            regex = "(apiserver|apiextensions|aggregator|authentication|authorization|authenticated|workqueue|process|go|rest_client)_.*"
+            target_label = "job"
+            replacement = "apiserver"
+          }
+          rule {
+            source_labels = ["__name__"]
+            regex = "scheduler_.*"
+            target_label = "job"
+            replacement = "kube-scheduler"
+          }
+          rule {
+            source_labels = ["__name__"]
+            regex = "(cronjob_controller|job_controller|attachdetach_controller|daemonset_controller|endpoint_controller|garbagecollector_controller|horizontal_pod_autoscaler|replicaset_controller|ttl_after_finished_controller)_.*"
+            target_label = "job"
+            replacement = "kube-controller-manager"
+          }
+      kubeletResource:
+        metricsTuning: {useDefaultAllowList: false}
+        extraMetricProcessingRules: |-
+          rule {
+            target_label = "metrics_path"
+            replacement = "/metrics/resource"
+          }
+      cadvisor:
+        jobLabel: kubelet
+        metricsTuning: {useDefaultAllowList: false}
+        extraMetricProcessingRules: |-
+          rule {
+            target_label = "metrics_path"
+            replacement = "/metrics/cadvisor"
+          }
+      apiServer: {enabled: false, jobLabel: apiserver, metricsTuning: {useDefaultAllowList: false}}
       kubeDNS: {enabled: true, jobLabel: coredns, metricsTuning: {useDefaultAllowList: false}}
       kubeControllerManager: {enabled: false}
       kubeScheduler: {enabled: false}
@@ -163,74 +205,6 @@ spec:
         extraConfig: |-
           discovery.kubernetes "nodes" {
             role = "node"
-          }
-
-          discovery.relabel "kube_controller_manager" {
-            targets = discovery.kubernetes.nodes.targets
-            rule {
-              source_labels = ["__meta_kubernetes_node_address_InternalIP"]
-              target_label = "__address__"
-              regex = "(.+)"
-              replacement = "$1:10257"
-            }
-            rule {
-              target_label = "__scheme__"
-              replacement  = "https"
-            }
-            rule {
-              source_labels = ["__meta_kubernetes_node_name"]
-              target_label  = "instance"
-            }
-            rule {
-              target_label = "job"
-              replacement  = "kube-controller-manager"
-            }
-          }
-          prometheus.scrape "kube_controller_manager" {
-            targets = discovery.relabel.kube_controller_manager.output
-            job_name = "kube-controller-manager"
-            authorization {
-              credentials_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-            }
-            tls_config {
-              insecure_skip_verify = true
-            }
-            scrape_interval = "30s"
-            forward_to = [otelcol.receiver.prometheus.telemetry.receiver]
-          }
-
-          discovery.relabel "kube_scheduler" {
-            targets = discovery.kubernetes.nodes.targets
-            rule {
-              source_labels = ["__meta_kubernetes_node_address_InternalIP"]
-              target_label = "__address__"
-              regex = "(.+)"
-              replacement = "$1:10259"
-            }
-            rule {
-              target_label = "__scheme__"
-              replacement  = "https"
-            }
-            rule {
-              source_labels = ["__meta_kubernetes_node_name"]
-              target_label  = "instance"
-            }
-            rule {
-              target_label = "job"
-              replacement  = "kube-scheduler"
-            }
-          }
-          prometheus.scrape "kube_scheduler" {
-            targets = discovery.relabel.kube_scheduler.output
-            job_name = "kube-scheduler"
-            authorization {
-              credentials_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-            }
-            tls_config {
-              insecure_skip_verify = true
-            }
-            scrape_interval = "30s"
-            forward_to = [otelcol.receiver.prometheus.telemetry.receiver]
           }
 
           discovery.relabel "etcd" {
