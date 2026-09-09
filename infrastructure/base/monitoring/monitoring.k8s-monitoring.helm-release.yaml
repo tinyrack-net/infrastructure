@@ -29,7 +29,27 @@ spec:
         metrics: {enabled: true, path: opentelemetry/v1/metrics}
         logs: {enabled: true, path: insert/opentelemetry/v1/logs}
         traces: {enabled: true, path: insert/opentelemetry/v1/traces}
+        # Bound serialized queue bytes and split large K3s scrapes before export.
+        timeout: 30s
+        sendingQueue:
+          enabled: true
+          sizer: bytes
+          queueSize: 134217728
+          numConsumers: 2
+        retryOnFailure:
+          enabled: true
+          initialInterval: 5s
+          maxInterval: 30s
+          maxElapsedTime: 5m
         processors:
+          batch:
+            size: 8192
+            maxSize: 8192
+            timeout: 2s
+          memoryLimiter:
+            enabled: true
+            limit: 1536MiB
+            checkInterval: 1s
           transform:
             metrics:
               datapoint:
@@ -102,6 +122,14 @@ spec:
             jobLabel: alloy
             namespaces: [monitoring-system]
             labelSelectors: {app.kubernetes.io/name: alloy}
+            metrics:
+              tuning:
+                includeMetrics:
+                  - otelcol_exporter_queue_(size|capacity)
+                  - otelcol_exporter_enqueue_failed_metric_points(_total)?
+                  - otelcol_receiver_refused_metric_points(_total)?
+                  - otelcol_processor_refused_metric_points(_total)?
+                  - otelcol_exporter_queue_batch_send_size_(bucket|sum|count)
     selfReporting: {enabled: true, destinations: [telemetry]}
     replaceComponent:
       - type: otelcol.processor.transform
