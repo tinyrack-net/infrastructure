@@ -196,6 +196,10 @@ spec:
     collectors:
       alloy:
         fullnameOverride: monitoring-alloy
+        controller:
+          podAnnotations:
+            # Avoid hanging old scrapes during this graph transition.
+            observability.tinyrack.net/otlp-pipeline: "bounded-k3s-v1"
         presets: [singleton, clustered, otel-receiver]
         includeDestinations: [telemetry]
         alloy:
