@@ -49,22 +49,31 @@ Cilium 호스트 방화벽은 공인 `eth0`의 TCP ingress를 전부 차단해�
 
 # 인프라 구성
 
+- [Flux](https://fluxcd.io/): Git 저장소를 정본으로 클러스터 상태 동기화
+- [Traefik](https://traefik.io/): 클러스터 인그레스와 TLS 종료
+- [cert-manager](https://cert-manager.io/): Let's Encrypt 인증서 발급·갱신
 - [Cilium](https://cilium.io/): eBPF 기반 클러스터 네트워크와 네트워크 정책 관리(CNI)
 - [CoreDNS](https://coredns.io/): 클러스터 DNS 서버 관리
 - [etcd](https://etcd.io/): 클러스터 데이터베이스 관리
 - [Cloudflare](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/): 클라우드플레어 터널 연결, 로드 밸런싱
 - [Tailscale](https://tailscale.com/): 가상 사설망에 쿠버네티스 API를 노출
 - [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets): 쿠버네티스 시크릿 관리
+- [Kyverno](https://kyverno.io/): 클러스터 정책과 리소스 검증
+- [Reflector](https://github.com/emberstack/kubernetes-reflector): 네임스페이스 간 시크릿 복제
 - [Local Path Provisioner](https://github.com/rancher/local-path-provisioner): 노드에 독립적인 블록 스토리지 관리
 - [Longhorn](https://longhorn.io/): 노드간 공유되는 블록 스토리지 관리
-- [CloudNativePG](https://cloudnative-pg.io/): PostgreSQL 데이터베이스 관리
-- [MariaDB Operator](https://github.com/mariadb-operator/mariadb-operator/): MariaDB 데이터베이스 관리
+- [CloudNativePG](https://cloudnative-pg.io/): PostgreSQL 데이터베이스 관리와 오브젝트 스토리지 백업
+- [OT Redis Operator](https://github.com/OT-CONTAINER-KIT/redis-operator): Redis 데이터베이스 관리
+- [MariaDB Operator](https://github.com/mariadb-operator/mariadb-operator/): MariaDB 데이터베이스 관리(현재 사용하는 인스턴스는 없어요)
+- [k8s-monitoring](https://github.com/grafana/k8s-monitoring-helm): Alloy로 메트릭·로그·트레이스 수집(공통 저장소와 Grafana는 홈랩에서 관리)
+- [system-upgrade-controller](https://github.com/rancher/system-upgrade-controller): K3s 노드 업그레이드 관리
 
 # 서비스 구성
 
-- [Ghost](https://ghost.org/): 타이니랙 블로그 (https://tinyrack.net)
 - [Discourse](https://www.discourse.org/): 타이니랙 포럼 (https://forum.tinyrack.net)
 - [Memos](https://www.usememos.com/): 타이니랙 작업 노트 (https://notes.tinyrack.net)
+- Issuary: 타이니랙 계정·인증 (https://auth.tinyrack.net)
+- tinest-relay: Tinest용 WebSocket 릴레이 (wss://relay.tinest.tinyrack.net/v1/ws)
 
 
 ---
@@ -120,7 +129,7 @@ cd ..
 Ansible 검증이 끝나면 Flux를 연동하고 인프라를 복원해요.
 
 ```bash
-flux bootstrap github \
+flux --context tinyrack bootstrap github \
   --repository=infrastructure \
   --branch=main \
   --path=./clusters/production \
@@ -132,7 +141,7 @@ flux bootstrap github \
 다음은 서비스들의 PVC 복원을 위해 롱혼의 UI에 접근해요.
 
 ```bash
-❯ kubectl port-forward service/longhorn-frontend 8000:80 -n longhorn-system
+❯ kubectl --context tinyrack port-forward service/longhorn-frontend 8000:80 -n longhorn-system
 ```
 
 이후 시스템 복원에서 마지막 백업 데이터를 복원해요.
@@ -170,7 +179,7 @@ flux bootstrap github \
 필요한 경우 다음의 명령어를 통해 새로운 시크릿을 생성할 수 있어요.
 
 ```bash
-kubectl create secret generic docmost-secret \
+kubectl --context tinyrack create secret generic docmost-secret \
         --namespace docmost-system \
         --dry-run=client \
         --from-literal=SOME_SECRET_KEY=SOME_SECRET_VALUE \
