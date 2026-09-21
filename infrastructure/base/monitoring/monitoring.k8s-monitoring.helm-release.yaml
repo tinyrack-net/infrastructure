@@ -30,7 +30,7 @@ spec:
         logs: {enabled: true, path: insert/opentelemetry/v1/logs}
         traces: {enabled: true, path: insert/opentelemetry/v1/traces}
         # Bound serialized queue bytes and split large K3s scrapes before export.
-        timeout: 30s
+        timeout: 60s
         sendingQueue:
           enabled: true
           sizer: bytes
