@@ -5,6 +5,9 @@ metadata:
   namespace: discourse-system
 spec:
   replicas: 1
+  # 1 replica + Longhorn RWO 볼륨이라 새 파드가 볼륨을 붙잡기 전에 기존 파드를 먼저 내려야 한다.
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: discourse
@@ -17,7 +20,7 @@ spec:
         - name: ghcr-secret
       containers:
         - name: discourse
-          image: ghcr.io/tinyrack-net/discourse:36
+          image: ghcr.io/tinyrack-net/discourse:v2026.9.0
           command: ["/sbin/boot"]
           ports:
             - containerPort: 80
@@ -29,6 +32,15 @@ spec:
             limits:
               cpu: "4"
               memory: "4Gi"
+          # 부팅 시 db:migrate -> assets:precompile(Ember 제외) -> unicorn 순으로 실행된다.
+          # 이 구간(최대 10분) 동안 startupProbe 가 liveness/readiness 를 막아주지 않으면
+          # 기존 livenessProbe(15초 + 20초 x 3회)가 컨테이너를 죽여 CrashLoopBackOff 에 빠진다.
+          startupProbe:
+            httpGet:
+              path: /
+              port: 80
+            periodSeconds: 10
+            failureThreshold: 60
           readinessProbe:
             httpGet:
               path: /
