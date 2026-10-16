@@ -10,7 +10,7 @@
 - name: Validate the K3s configuration inputs
   ansible.builtin.assert:
     that:
-      - setup_k3s_server_version == "v1.36.3+k3s1"
+      - setup_k3s_server_version == "v1.37.1+k3s1"
       - setup_k3s_server_cluster_cidr == "10.55.0.0/16"
       - setup_k3s_server_service_cidr == "10.56.0.0/16"
       - setup_k3s_server_cluster_cidr != setup_k3s_server_service_cidr

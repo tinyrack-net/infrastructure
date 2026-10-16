@@ -112,7 +112,7 @@ make verify
 cd ..
 ```
 
-첫 번째 apply는 필요한 호스트 패키지를 설치하고, Longhorn과 충돌하는 multipath를 비활성화하고, iSCSI와 inotify 한계 및 K3S resolver를 구성해요. 이어서 `v1.36.3+k3s1`을 다음 설정으로 설치하거나 기존 설치를 안전하게 관리 상태로 편입해요.
+첫 번째 apply는 필요한 호스트 패키지를 설치하고, Longhorn과 충돌하는 multipath를 비활성화하고, iSCSI와 inotify 한계 및 K3S resolver를 구성해요. 이어서 `v1.37.1+k3s1`을 다음 설정으로 설치하거나 기존 설치를 안전하게 관리 상태로 편입해요.
 
 - embedded etcd 단일 서버
 - Pod CIDR `10.55.0.0/16`, Service CIDR `10.56.0.0/16`
