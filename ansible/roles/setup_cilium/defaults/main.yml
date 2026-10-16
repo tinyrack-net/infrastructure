@@ -1,5 +1,5 @@
 ---
-setup_cilium_version: 1.20.1
+setup_cilium_version: 1.20.3
 setup_cilium_release_name: cilium
 setup_cilium_namespace: kube-system
 setup_cilium_chart: oci://quay.io/cilium/charts/cilium

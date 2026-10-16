@@ -2,7 +2,7 @@
 - name: Validate Cilium inputs and host support
   ansible.builtin.assert:
     that:
-      - setup_cilium_version == "1.20.1"
+      - setup_cilium_version == "1.20.3"
       - ansible_facts.kernel is version("5.10", ">=")
       - ansible_facts.architecture == "x86_64"
       - setup_cilium_kube_context == "tinyrack"
