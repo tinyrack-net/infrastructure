@@ -209,7 +209,8 @@ spec:
               # Disk-backed emptyDir. Never use medium: Memory on this node.
               - name: export-queue
                 emptyDir:
-                  sizeLimit: 512Mi
+                  # Two 128MiB queues (metrics, logs) plus bbolt compaction copies.
+                  sizeLimit: 1Gi
         presets: [singleton, clustered, otel-receiver]
         includeDestinations: [telemetry]
         alloy:
