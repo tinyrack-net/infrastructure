@@ -35,7 +35,11 @@ spec:
           enabled: true
           sizer: bytes
           queueSize: 134217728
-          numConsumers: 2
+          # Keep a few exports moving while one request stalls on the tunnel.
+          # The node has little spare memory, so stay well below the default 10.
+          numConsumers: 4
+          # Persist the queue on the node disk instead of the Alloy heap.
+          storage: otelcol.storage.file.queue.handler
         retryOnFailure:
           enabled: true
           initialInterval: 5s
@@ -200,13 +204,34 @@ spec:
           podAnnotations:
             # Avoid hanging old scrapes during this graph transition.
             observability.tinyrack.net/otlp-pipeline: "bounded-k3s-v1"
+          volumes:
+            extra:
+              # Disk-backed emptyDir. Never use medium: Memory on this node.
+              - name: export-queue
+                emptyDir:
+                  sizeLimit: 512Mi
         presets: [singleton, clustered, otel-receiver]
         includeDestinations: [telemetry]
         alloy:
+          # otelcol.storage.file is a public-preview component.
+          stabilityLevel: public-preview
           resources:
             requests: {cpu: 100m, memory: 512Mi}
             limits: {cpu: "1", memory: 2Gi}
+          mounts:
+            extra:
+              - name: export-queue
+                mountPath: /var/lib/alloy-queue
         extraConfig: |-
+          otelcol.storage.file "queue" {
+            directory = "/var/lib/alloy-queue"
+            compaction {
+              on_start = true
+              on_rebound = true
+              directory = "/var/lib/alloy-queue"
+            }
+          }
+
           discovery.kubernetes "nodes" {
             role = "node"
           }
