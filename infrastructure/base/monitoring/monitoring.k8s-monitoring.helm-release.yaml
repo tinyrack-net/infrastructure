@@ -34,7 +34,9 @@ spec:
         sendingQueue:
           enabled: true
           sizer: bytes
-          queueSize: 134217728
+          # 1GiB on disk. tinyrack fills 128MiB within 1-2 minutes when a few
+          # exports stall for the 60s timeout, so buffer several minutes.
+          queueSize: 1073741824
           # Keep a few exports moving while one request stalls on the tunnel.
           # The node has little spare memory, so stay well below the default 10.
           numConsumers: 4
@@ -209,8 +211,9 @@ spec:
               # Disk-backed emptyDir. Never use medium: Memory on this node.
               - name: export-queue
                 emptyDir:
-                  # Two 128MiB queues (metrics, logs) plus bbolt compaction copies.
-                  sizeLimit: 1Gi
+                  # 1GiB queues per signal (metrics, logs, traces) plus a
+                  # bbolt compaction copy. Exceeding the limit evicts the pod.
+                  sizeLimit: 4Gi
         presets: [singleton, clustered, otel-receiver]
         includeDestinations: [telemetry]
         alloy:
