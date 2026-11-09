@@ -19,7 +19,6 @@ setup_cilium_isolated_namespaces:
   - issuary-system
   - kyverno
   - longhorn-system
-  - mariadb-operator-system
   - memos-system
   - monitoring-system
   - ot-redis-operator-system

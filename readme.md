@@ -64,7 +64,6 @@ Cilium 호스트 방화벽은 공인 `eth0`의 TCP ingress를 전부 차단해�
 - [Longhorn](https://longhorn.io/): 노드간 공유되는 블록 스토리지 관리
 - [CloudNativePG](https://cloudnative-pg.io/): PostgreSQL 데이터베이스 관리와 오브젝트 스토리지 백업
 - [OT Redis Operator](https://github.com/OT-CONTAINER-KIT/redis-operator): Redis 데이터베이스 관리
-- [MariaDB Operator](https://github.com/mariadb-operator/mariadb-operator/): MariaDB 데이터베이스 관리(현재 사용하는 인스턴스는 없어요)
 - [k8s-monitoring](https://github.com/grafana/k8s-monitoring-helm): Alloy로 메트릭·로그·트레이스 수집(공통 저장소와 Grafana는 홈랩에서 관리)
 - [system-upgrade-controller](https://github.com/rancher/system-upgrade-controller): K3s 노드 업그레이드 관리
 
