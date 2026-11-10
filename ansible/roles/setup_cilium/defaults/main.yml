@@ -13,6 +13,7 @@ setup_cilium_ready_timeout: 10m
 setup_cilium_isolated_namespaces:
   - cert-manager-system
   - cnpg-system
+  - crowdsec-system
   - discourse-system
   - flux-system
   - issuary-system

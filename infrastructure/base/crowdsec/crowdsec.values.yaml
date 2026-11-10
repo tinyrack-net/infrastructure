@@ -1,0 +1,107 @@
+# CrowdSec for the public Traefik. The agent reads the Traefik access logs,
+# LAPI stores decisions and syncs the community blocklist (CAPI). The Traefik
+# bouncer plugin pulls decisions from LAPI in stream mode.
+container_runtime: containerd
+
+secrets:
+  # crowdsec.lapi.secret.yaml: csLapiSecret, registrationToken,
+  # BOUNCER_KEY_traefik, ENROLL_KEY
+  externalSecret:
+    name: crowdsec-lapi-secrets
+
+config:
+  # Local scenarios are enforced: their alerts create decisions. To fall back
+  # to alert-only, set `simulation: true` (see README -> CrowdSec).
+  simulation.yaml: |
+    simulation: false
+    exclusions: []
+  config.yaml.local: |
+    api:
+      server:
+        auto_registration:
+          enabled: true
+          token: "${REGISTRATION_TOKEN}"
+          allowed_ranges:
+            - "127.0.0.1/32"
+            - "10.55.0.0/16"
+
+lapi:
+  replicas: 1
+  env:
+    # Registers the Traefik plugin with the key from the sealed secret.
+    - name: BOUNCER_KEY_traefik
+      valueFrom:
+        secretKeyRef:
+          name: crowdsec-lapi-secrets
+          key: BOUNCER_KEY_traefik
+    - name: ENROLL_KEY
+      valueFrom:
+        secretKeyRef:
+          name: crowdsec-lapi-secrets
+          key: ENROLL_KEY
+          optional: true
+    - name: ENROLL_INSTANCE_NAME
+      value: tinyrack
+    - name: ENROLL_TAGS
+      value: "tinyrack k8s"
+    - name: PRIVATE_ALLOWLIST
+      valueFrom:
+        secretKeyRef:
+          name: crowdsec-allowlist
+          key: PRIVATE_ALLOWLIST
+  lifecycle:
+    postStart:
+      exec:
+        command:
+          - /bin/sh
+          - -c
+          - nohup /etc/crowdsec-allowlist/apply.sh > /proc/1/fd/1 2>&1 &
+  extraVolumes:
+    - name: crowdsec-allowlist-script
+      configMap:
+        name: crowdsec-allowlist-script
+        defaultMode: 0555
+  extraVolumeMounts:
+    - name: crowdsec-allowlist-script
+      mountPath: /etc/crowdsec-allowlist
+      readOnly: true
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 500Mi
+  # Not in the Longhorn backup group: decisions and the hub are re-synced from
+  # CAPI and the instance re-enrolls with ENROLL_KEY after a rebuild.
+  persistentVolume:
+    data:
+      enabled: true
+      storageClassName: longhorn
+      size: 1Gi
+    config:
+      enabled: true
+      storageClassName: longhorn
+      size: 100Mi
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+agent:
+  acquisition:
+    - namespace: traefik-system
+      podName: traefik-*
+      program: traefik
+  env:
+    - name: COLLECTIONS
+      value: "crowdsecurity/traefik crowdsecurity/http-cve crowdsecurity/base-http-scenarios"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 96Mi
+    limits:
+      memory: 250Mi
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true

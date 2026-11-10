@@ -20,4 +20,5 @@ resources:
   - backup-cleanup.yaml
   - ot-redis-operator.yaml
   - cilium-host-firewall.yaml
+  - crowdsec.yaml
   - monitoring.yaml

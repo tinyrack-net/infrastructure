@@ -100,6 +100,13 @@ spec:
         - ports:
             - port: "9100"
               protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: crowdsec-system
+      toPorts:
+        - ports:
+            - port: "6060"
+              protocol: TCP
     - toEntities:
         - host
       toPorts:

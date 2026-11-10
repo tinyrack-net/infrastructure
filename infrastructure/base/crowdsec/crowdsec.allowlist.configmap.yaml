@@ -1,0 +1,29 @@
+# Keeps the centralized allowlist `tinyrack-trusted` in LAPI in sync.
+# Private ranges are listed here; public addresses that must never be blocked
+# (own servers with fixed addresses) come from the sealed crowdsec-allowlist
+# secret so they stay out of the public repository. The home connection has a
+# dynamic address and is intentionally not listed.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: crowdsec-allowlist-script
+  namespace: crowdsec-system
+data:
+  apply.sh: |
+    #!/bin/sh
+    set -u
+    name=tinyrack-trusted
+    private="10.0.0.0/8 100.64.0.0/10 172.16.0.0/12 192.168.0.0/16"
+    i=0
+    until cscli lapi status >/dev/null 2>&1; do
+      i=$((i + 1)); [ "$i" -gt 60 ] && { echo "allowlist: LAPI not ready"; exit 1; }
+      sleep 5
+    done
+    cscli allowlists create "$name" -d "Private ranges and own servers" >/dev/null 2>&1 || true
+    # Recreate the content so removed entries disappear.
+    current=$(cscli allowlists inspect "$name" -o json 2>/dev/null \
+      | sed -n 's/.*"value": *"\([^"]*\)".*/\1/p')
+    [ -n "$current" ] && cscli allowlists remove "$name" $current >/dev/null 2>&1
+    # shellcheck disable=SC2086
+    cscli allowlists add "$name" $private ${PRIVATE_ALLOWLIST:-} -d "managed by apply.sh" >/dev/null \
+      && echo "allowlist: $name synced ($(echo $private ${PRIVATE_ALLOWLIST:-} | wc -w) entries)"
