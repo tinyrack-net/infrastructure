@@ -17,6 +17,15 @@ providers:
 ports:
   # Clients connect directly (DNS-only records), so no forwarded headers are
   # trusted and HTTP is only served to redirect to HTTPS.
+  # The shared protection chain (infrastructure/base/traefik-middlewares) runs
+  # for every route on websecure.
+  websecure:
+    http:
+      middlewares:
+        - traefik-system-edge-crowdsec@kubernetescrd
+        - traefik-system-edge-ratelimit@kubernetescrd
+        - traefik-system-edge-inflight@kubernetescrd
+        - traefik-system-edge-headers@kubernetescrd
   web:
     http:
       redirections:
