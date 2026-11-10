@@ -3,9 +3,9 @@
 ```mermaid
 flowchart TB
     internet["인터넷"]
-    cloudflare-tunnel["클라우드 플레어 터널"]
+    cloudflare-proxy["클라우드플레어 프록시"]
     cloud-storage["클라우드 백업 스토리지"]
-    internet --> cloudflare-tunnel
+    internet --> cloudflare-proxy
 
     subgraph firewall["방화벽"]
         subgraph tailscale["태일스케일 네트워크"]
@@ -23,7 +23,7 @@ flowchart TB
         end
     end
 
-    cloudflare-tunnel --> cluster
+    cloudflare-proxy -- "HTTPS 443" --> cluster
     backup-storage --> cloud-storage
 ```
 
@@ -33,11 +33,16 @@ flowchart TB
 
 ## 보안 전략
 
-이 클러스터는 **제로 트러스트** 보안 전략으로 구축되어 있어요. 그래서 공인 IP를 통한 모든 네트워크 접근은 방화벽에서 차단돼요. 외부에서는 오직 [클라우드플레어 터널](https://blog.cloudflare.com/ko-kr/tag/cloudflare-tunnel/)을 통해서만 서비스로 접근할 수 있고 클러스터 관리는 [테일스케일](https://tailscale.com/)을 통해 가상 사설망에서 이루어져요.
+공개 서비스는 공인 IP의 HTTPS(443)로 직접 서비스돼요. 서비스 도메인은 클라우드플레어 프록시(DNS `A` 레코드, proxied)를 거치지만, 원본 443 포트는 누구나 직접 접근할 수 있어요. 그 외 공인 IP를 통한 모든 네트워크 접근은 방화벽에서 차단되고, 클러스터 관리는 [테일스케일](https://tailscale.com/)을 통해 가상 사설망에서만 이루어져요.
 
 ### 호스트 방화벽 운영
 
-Cilium 호스트 방화벽은 공인 `eth0`의 TCP ingress를 전부 차단해요. 서비스는 outbound Cloudflare Tunnel이 Traefik 8443에 연결하고, SSH와 Kubernetes API는 Tailscale을 통해서만 접근해요.
+공인 트래픽은 두 계층의 방화벽을 거쳐요.
+
+- Hetzner Cloud 방화벽 `tinyrack`: ICMP와 TCP 443만 허용해요.
+- Cilium 호스트 방화벽: 공인 `eth0`의 호스트 TCP ingress를 전부 차단해요. 443은 K3S ServiceLB의 `traefik` LoadBalancer 서비스를 통해 Traefik 파드 8443으로 전달되고, `platform-traefik` 정책이 `world` 엔티티의 8443 ingress를 허용해요.
+
+Traefik은 80 포트를 노출하지 않아요. HTTP→HTTPS 리디렉션은 클라우드플레어가 처리해요. `websecure` 엔트리포인트는 [클라우드플레어 IP 대역](https://www.cloudflare.com/ips/)의 `X-Forwarded-*` 헤더만 신뢰하므로 대역이 바뀌면 `traefik.values.yaml`을 갱신해요. SSH와 Kubernetes API는 Tailscale을 통해서만 접근해요.
 
 정책 변경 전에는 `reserved:host` endpoint에 `PolicyAuditMode`를 켜고 Hubble과 `cilium-dbg monitor`를 관찰해요. Audit Mode는 Cilium 재시작 후 유지되지 않아요. 장애 시 Tailscale SSH 또는 Hetzner console로 접속해 Audit Mode를 다시 켜고, Flux의 `cilium-host-firewall` Kustomization을 suspend한 뒤 Git 정책을 되돌려 reconcile해요.
 
@@ -55,7 +60,7 @@ Cilium 호스트 방화벽은 공인 `eth0`의 TCP ingress를 전부 차단해�
 - [Cilium](https://cilium.io/): eBPF 기반 클러스터 네트워크와 네트워크 정책 관리(CNI)
 - [CoreDNS](https://coredns.io/): 클러스터 DNS 서버 관리
 - [etcd](https://etcd.io/): 클러스터 데이터베이스 관리
-- [Cloudflare](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/): 클라우드플레어 터널 연결, 로드 밸런싱
+- [Cloudflare](https://developers.cloudflare.com/dns/proxy-status/): DNS와 공개 서비스 프록시(CDN·WAF)
 - [Tailscale](https://tailscale.com/): 가상 사설망에 쿠버네티스 API를 노출
 - [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets): 쿠버네티스 시크릿 관리
 - [Kyverno](https://kyverno.io/): 클러스터 정책과 리소스 검증

@@ -12,7 +12,6 @@ resources:
   - reflector.yaml
   - traefik.yaml
   - cert-manager.yaml
-  - cloudflared.yaml
   - tailscale.yaml
   - configs.yaml
   - longhorn.yaml

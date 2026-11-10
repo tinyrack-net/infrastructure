@@ -12,7 +12,6 @@ setup_cilium_flux_helm_release_name: cilium
 setup_cilium_ready_timeout: 10m
 setup_cilium_isolated_namespaces:
   - cert-manager-system
-  - cloudflared-system
   - cnpg-system
   - discourse-system
   - flux-system
