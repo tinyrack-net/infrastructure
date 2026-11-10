@@ -3,9 +3,7 @@
 ```mermaid
 flowchart TB
     internet["인터넷"]
-    cloudflare-proxy["클라우드플레어 프록시"]
     cloud-storage["클라우드 백업 스토리지"]
-    internet --> cloudflare-proxy
 
     subgraph firewall["방화벽"]
         subgraph tailscale["태일스케일 네트워크"]
@@ -23,7 +21,7 @@ flowchart TB
         end
     end
 
-    cloudflare-proxy -- "HTTPS 443" --> cluster
+    internet -- "HTTP 80 · HTTPS 443" --> cluster
     backup-storage --> cloud-storage
 ```
 
@@ -33,16 +31,16 @@ flowchart TB
 
 ## 보안 전략
 
-공개 서비스는 공인 IP의 HTTPS(443)로 직접 서비스돼요. 서비스 도메인은 클라우드플레어 프록시(DNS `A` 레코드, proxied)를 거치지만, 원본 443 포트는 누구나 직접 접근할 수 있어요. 그 외 공인 IP를 통한 모든 네트워크 접근은 방화벽에서 차단되고, 클러스터 관리는 [테일스케일](https://tailscale.com/)을 통해 가상 사설망에서만 이루어져요.
+공개 서비스는 프록시나 터널 없이 공인 IP로 직접 서비스돼요. 서비스 도메인은 클라우드플레어 DNS의 DNS 전용(proxied 아님) `A` 레코드로 서버 공인 IPv4를 가리켜요. HTTPS(443)와 HTTPS 리디렉션용 HTTP(80)만 공개되고, 그 외 공인 IP를 통한 모든 네트워크 접근은 방화벽에서 차단되고, 클러스터 관리는 [테일스케일](https://tailscale.com/)을 통해 가상 사설망에서만 이루어져요.
 
 ### 호스트 방화벽 운영
 
 공인 트래픽은 두 계층의 방화벽을 거쳐요.
 
-- Hetzner Cloud 방화벽 `tinyrack`: ICMP와 TCP 443만 허용해요.
-- Cilium 호스트 방화벽: 공인 `eth0`의 호스트 TCP ingress를 전부 차단해요. 443은 K3S ServiceLB의 `traefik` LoadBalancer 서비스를 통해 Traefik 파드 8443으로 전달되고, `platform-traefik` 정책이 `world` 엔티티의 8443 ingress를 허용해요.
+- Hetzner Cloud 방화벽 `tinyrack`: ICMP와 TCP 80·443만 허용해요.
+- Cilium 호스트 방화벽: 공인 `eth0`의 호스트 TCP ingress를 전부 차단해요. 80·443은 K3S ServiceLB의 `traefik` LoadBalancer 서비스를 통해 Traefik 파드 8000·8443으로 전달되고, `platform-traefik` 정책이 `world` 엔티티의 8000·8443 ingress를 허용해요.
 
-Traefik은 80 포트를 노출하지 않아요. HTTP→HTTPS 리디렉션은 클라우드플레어가 처리해요. `websecure` 엔트리포인트는 [클라우드플레어 IP 대역](https://www.cloudflare.com/ips/)의 `X-Forwarded-*` 헤더만 신뢰하므로 대역이 바뀌면 `traefik.values.yaml`을 갱신해요. SSH와 Kubernetes API는 Tailscale을 통해서만 접근해요.
+Traefik의 `web`(80) 엔트리포인트는 모든 요청을 `websecure`(443)로 영구 리디렉션해요. 클라이언트가 직접 접속하므로 `X-Forwarded-*` 헤더는 신뢰하지 않아요. SSH와 Kubernetes API는 Tailscale을 통해서만 접근해요.
 
 정책 변경 전에는 `reserved:host` endpoint에 `PolicyAuditMode`를 켜고 Hubble과 `cilium-dbg monitor`를 관찰해요. Audit Mode는 Cilium 재시작 후 유지되지 않아요. 장애 시 Tailscale SSH 또는 Hetzner console로 접속해 Audit Mode를 다시 켜고, Flux의 `cilium-host-firewall` Kustomization을 suspend한 뒤 Git 정책을 되돌려 reconcile해요.
 
@@ -60,7 +58,7 @@ Traefik은 80 포트를 노출하지 않아요. HTTP→HTTPS 리디렉션은 클
 - [Cilium](https://cilium.io/): eBPF 기반 클러스터 네트워크와 네트워크 정책 관리(CNI)
 - [CoreDNS](https://coredns.io/): 클러스터 DNS 서버 관리
 - [etcd](https://etcd.io/): 클러스터 데이터베이스 관리
-- [Cloudflare](https://developers.cloudflare.com/dns/proxy-status/): DNS와 공개 서비스 프록시(CDN·WAF)
+- [Cloudflare](https://developers.cloudflare.com/dns/): DNS 관리(프록시 미사용)
 - [Tailscale](https://tailscale.com/): 가상 사설망에 쿠버네티스 API를 노출
 - [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets): 쿠버네티스 시크릿 관리
 - [Kyverno](https://kyverno.io/): 클러스터 정책과 리소스 검증
