@@ -1,3 +1,14 @@
+# CrowdSec bouncer (pinned). Downloaded from the Traefik plugin catalog at startup.
+experimental:
+  plugins:
+    crowdsec:
+      moduleName: github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin
+      version: v1.8.1
+# LAPI key for the bouncer plugin (traefik.crowdsec-bouncer.secret.yaml).
+volumes:
+  - name: crowdsec-bouncer
+    mountPath: /etc/crowdsec-bouncer
+    type: secret
 providers:
   kubernetesCRD:
     allowExternalNameServices: true
@@ -28,6 +39,8 @@ accessLog:
       defaultMode: drop
       names:
         traceparent: keep
+        # CrowdSec's bad user agent and crawler scenarios read it.
+        User-Agent: keep
     queryParameters:
       defaultMode: drop
 tracing:

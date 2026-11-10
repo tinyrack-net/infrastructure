@@ -4,6 +4,7 @@ resources:
   - traefik.namespace.yaml
   - traefik.helm-release.yaml
   - traefik.cilium-network-policy.yaml
+  - traefik.crowdsec-bouncer.secret.yaml
 configMapGenerator:
   - name: traefik-values
     namespace: traefik-system

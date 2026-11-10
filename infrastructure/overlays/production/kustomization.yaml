@@ -11,6 +11,7 @@ resources:
   - sealed-secrets.yaml
   - reflector.yaml
   - traefik.yaml
+  - traefik-middlewares.yaml
   - cert-manager.yaml
   - tailscale.yaml
   - configs.yaml

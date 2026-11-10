@@ -1,0 +1,71 @@
+# Shared protection for the websecure entrypoint (see traefik.values.yaml).
+# Kept in its own Flux Kustomization so the Traefik CRDs exist before these are
+# applied on a fresh cluster. Limits are per client address and sized well above
+# normal browser peaks.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: edge-ratelimit
+  namespace: traefik-system
+spec:
+  rateLimit:
+    average: 100
+    period: 1s
+    burst: 600
+    sourceCriterion:
+      ipStrategy:
+        depth: 0
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: edge-inflight
+  namespace: traefik-system
+spec:
+  inFlightReq:
+    amount: 200
+    sourceCriterion:
+      ipStrategy:
+        depth: 0
+---
+# CrowdSec bouncer: rejects addresses that LAPI has a decision for (community
+# blocklist, local scenarios and manual bans). Stream mode keeps the decision
+# list in Traefik; if LAPI is unreachable the last list stays in use and traffic
+# is never blocked because of it (fail open).
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: edge-crowdsec
+  namespace: traefik-system
+spec:
+  plugin:
+    crowdsec:
+      enabled: true
+      logLevel: INFO
+      crowdsecMode: stream
+      crowdsecLapiScheme: http
+      crowdsecLapiHost: crowdsec-service.crowdsec-system.svc.cluster.local:8080
+      crowdsecLapiKeyFile: /etc/crowdsec-bouncer/api-key
+      updateIntervalSeconds: 60
+      updateMaxFailure: -1
+      streamStartupBlock: false
+      # Private, VPN and cluster clients are never checked.
+      clientTrustedIPs:
+        - 10.0.0.0/8
+        - 100.64.0.0/10
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+      metricsUpdateIntervalSeconds: 600
+---
+# No frame or CSP headers here: apps set their own.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: edge-headers
+  namespace: traefik-system
+spec:
+  headers:
+    stsSeconds: 31536000
+    stsIncludeSubdomains: false
+    contentTypeNosniff: true
+    referrerPolicy: strict-origin-when-cross-origin

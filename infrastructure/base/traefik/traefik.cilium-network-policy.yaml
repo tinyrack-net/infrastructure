@@ -32,6 +32,15 @@ spec:
         - ports:
             - port: "6443"
               protocol: TCP
+    # CrowdSec bouncer plugin pulls decisions from LAPI.
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: crowdsec-system
+            type: lapi
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
     - toEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: discourse-system
