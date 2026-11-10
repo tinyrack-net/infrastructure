@@ -42,6 +42,34 @@ flowchart TB
 
 Traefik의 `web`(80) 엔트리포인트는 모든 요청을 `websecure`(443)로 영구 리디렉션해요. 클라이언트가 직접 접속하므로 `X-Forwarded-*` 헤더는 신뢰하지 않아요. SSH와 Kubernetes API는 Tailscale을 통해서만 접근해요.
 
+`websecure`의 모든 라우트에는 `traefik-middlewares`의 보호 체인이 순서대로 적용돼요.
+
+1. `edge-crowdsec`: CrowdSec 판정(decision)이 있는 주소를 403으로 차단해요.
+2. `edge-ratelimit`: 클라이언트 주소별 평균 100 req/s, 버스트 600.
+3. `edge-inflight`: 클라이언트 주소별 동시 요청 200.
+4. `edge-headers`: HSTS(1년), `nosniff`, `Referrer-Policy`.
+
+### CrowdSec
+
+[CrowdSec](https://www.crowdsec.net/) 에이전트가 Traefik 액세스 로그를 읽고, LAPI가 판정을 저장하며 커뮤니티 차단 목록(CAPI)을 동기화해요. Traefik의 [바운서 플러그인](https://plugins.traefik.io/plugins/6335346ca4caa9ddeffda116/crowdsec-bouncer-traefik-plugin)은 60초마다 LAPI에서 판정을 스트림으로 받아요. LAPI가 응답하지 않으면 마지막 목록을 유지하고 그 때문에 요청을 차단하지 않아요(fail open). 인스턴스는 CrowdSec Console에 `tinyrack`으로 등록돼요.
+
+- 차단 원천: 커뮤니티 차단 목록, 로컬 시나리오(`traefik`, `http-cve`, `base-http-scenarios` 컬렉션), 수동 판정. 로컬 시나리오는 시뮬레이션 없이 바로 차단해요(기본 4시간).
+- 허용 목록 `tinyrack-trusted`: 사설 대역과 고정 주소 서버(봉인된 `crowdsec-allowlist`). 집 회선은 동적 IP라 넣지 않아요. 집에서 차단되면 아래 명령으로 해제해요. 관리 접근(SSH·Kubernetes API)은 Tailscale이라 영향이 없어요.
+- LAPI 볼륨은 백업하지 않아요. 재구축 시 판정과 허브는 CAPI에서 다시 받고 `ENROLL_KEY`로 다시 등록돼요.
+
+```bash
+kubectl --context tinyrack -n crowdsec-system exec deploy/crowdsec-lapi -- cscli alerts list
+kubectl --context tinyrack -n crowdsec-system exec deploy/crowdsec-lapi -- cscli decisions list
+# 차단 해제. 판정만 지워요(alerts delete는 판정을 즉시 삭제해 바운서가 해제를 받지 못해요).
+kubectl --context tinyrack -n crowdsec-system exec deploy/crowdsec-lapi -- cscli decisions delete --ip <ip>
+# 수동 차단
+kubectl --context tinyrack -n crowdsec-system exec deploy/crowdsec-lapi -- cscli decisions add --ip <ip> -d 4h -R <reason>
+```
+
+해제·차단은 바운서의 다음 동기화(최대 60초) 후 반영돼요. 오탐이 많으면 `crowdsec.values.yaml`의 `simulation.yaml`을 `simulation: true`로 바꿔 로컬 시나리오를 경보 전용으로 돌려요(커뮤니티 차단 목록과 수동 판정은 계속 적용돼요). 허용 목록의 공인 주소를 바꾸려면 `PRIVATE_ALLOWLIST`(공백 구분)로 `crowdsec-allowlist`를 다시 봉인하고 LAPI를 재시작해요.
+
+바운서 플러그인은 Traefik이 시작할 때 Traefik 플러그인 카탈로그에서 내려받아요. 카탈로그에 접근할 수 없으면 미들웨어가 로드되지 않아 `websecure` 라우트가 실패하므로, 급할 때는 `traefik.values.yaml`의 `websecure.http.middlewares`에서 `edge-crowdsec`을 빼요.
+
 정책 변경 전에는 `reserved:host` endpoint에 `PolicyAuditMode`를 켜고 Hubble과 `cilium-dbg monitor`를 관찰해요. Audit Mode는 Cilium 재시작 후 유지되지 않아요. 장애 시 Tailscale SSH 또는 Hetzner console로 접속해 Audit Mode를 다시 켜고, Flux의 `cilium-host-firewall` Kustomization을 suspend한 뒤 Git 정책을 되돌려 reconcile해요.
 
 ## 데이터 관리
@@ -59,6 +87,7 @@ Traefik의 `web`(80) 엔트리포인트는 모든 요청을 `websecure`(443)로 
 - [CoreDNS](https://coredns.io/): 클러스터 DNS 서버 관리
 - [etcd](https://etcd.io/): 클러스터 데이터베이스 관리
 - [Cloudflare](https://developers.cloudflare.com/dns/): DNS 관리(프록시 미사용)
+- [CrowdSec](https://www.crowdsec.net/): Traefik 로그 기반 공격 탐지와 차단(커뮤니티 차단 목록)
 - [Tailscale](https://tailscale.com/): 가상 사설망에 쿠버네티스 API를 노출
 - [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets): 쿠버네티스 시크릿 관리
 - [Kyverno](https://kyverno.io/): 클러스터 정책과 리소스 검증
