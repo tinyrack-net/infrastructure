@@ -57,6 +57,23 @@ spec:
         - 192.168.0.0/16
       metricsUpdateIntervalSeconds: 600
 ---
+# Response compression for apps that do not compress themselves. Cloudflare used
+# to do this at the edge; with direct access, uncompressed assets over the long
+# RTT to the server made pages load slowly or stall. Attached per route (not on
+# the websecure chain) so streaming responses of other apps stay untouched.
+# Responses that already have Content-Encoding are passed through.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: edge-compress
+  namespace: traefik-system
+spec:
+  compress:
+    encodings:
+      - zstd
+      - br
+      - gzip
+---
 # No frame or CSP headers here: apps set their own.
 apiVersion: traefik.io/v1alpha1
 kind: Middleware

@@ -51,6 +51,8 @@ Traefik의 `web`(80) 엔트리포인트는 모든 요청을 `websecure`(443)로 
 3. `edge-inflight`: 클라이언트 주소별 동시 요청 200.
 4. `edge-headers`: HSTS(1년), `nosniff`, `Referrer-Policy`.
 
+Cloudflare가 하던 응답 압축은 하지 않으므로, 스스로 압축하지 않는 앱(Issuary)은 Ingress에 `traefik-system-edge-compress@kubernetescrd` 미들웨어를 붙여 zstd·br·gzip으로 압축해요. 스트리밍 응답을 건드리지 않도록 공통 체인에는 넣지 않아요.
+
 ### CrowdSec
 
 [CrowdSec](https://www.crowdsec.net/) 에이전트가 Traefik 액세스 로그를 읽고, LAPI가 판정을 저장하며 커뮤니티 차단 목록(CAPI)을 동기화해요. Traefik의 [바운서 플러그인](https://plugins.traefik.io/plugins/6335346ca4caa9ddeffda116/crowdsec-bouncer-traefik-plugin)은 60초마다 LAPI에서 판정을 스트림으로 받아요. LAPI가 응답하지 않으면 마지막 목록을 유지하고 그 때문에 요청을 차단하지 않아요(fail open). 인스턴스는 CrowdSec Console에 `tinyrack`으로 등록돼요.

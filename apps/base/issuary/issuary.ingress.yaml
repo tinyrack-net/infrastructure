@@ -5,6 +5,8 @@ metadata:
   namespace: issuary-system
   annotations:
     ingress.kubernetes.io/force-ssl-redirect: "true"
+    # Issuary serves assets uncompressed (~1.7 MB on the login page).
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-edge-compress@kubernetescrd
 spec:
   ingressClassName: traefik
   rules:
