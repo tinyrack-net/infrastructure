@@ -17,6 +17,16 @@ spec:
               protocol: TCP
             - port: "8443"
               protocol: TCP
+    # In-cluster clients calling public hostnames reach Traefik pod-to-pod
+    # (LoadBalancer IP hairpin), so the world rule does not cover them.
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: discourse-system
+            app: discourse
+      toPorts:
+        - ports:
+            - port: "8443"
+              protocol: TCP
     - fromEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: monitoring-system

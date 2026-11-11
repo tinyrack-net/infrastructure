@@ -36,6 +36,17 @@ specs:
           - ports:
               - port: "6379"
                 protocol: TCP
+      # Public hostnames (auth.tinyrack.net for OIDC, forum.tinyrack.net) resolve
+      # to the Traefik LoadBalancer IP, which Cilium routes straight to the
+      # Traefik pods instead of the world egress rule.
+      - toEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: traefik-system
+              app.kubernetes.io/name: traefik
+        toPorts:
+          - ports:
+              - port: "8443"
+                protocol: TCP
   - endpointSelector:
       matchLabels:
         io.cilium.k8s.namespace.labels.networking.tinyrack.net/isolation: enabled

@@ -42,6 +42,8 @@ flowchart TB
 
 Traefik의 `web`(80) 엔트리포인트는 모든 요청을 `websecure`(443)로 영구 리디렉션해요. 클라이언트가 직접 접속하므로 `X-Forwarded-*` 헤더는 신뢰하지 않아요. SSH와 Kubernetes API는 Tailscale을 통해서만 접근해요.
 
+클러스터 안의 파드가 공개 도메인(예: Discourse가 OIDC로 호출하는 `auth.tinyrack.net`)에 접속하면 Cilium이 LoadBalancer IP를 Traefik 파드로 직접 연결해요. 이 트래픽은 `world`가 아닌 파드 간 트래픽이라 `isolated-namespaces`의 공인 대역 egress 규칙에 해당하지 않아요. 이런 클라이언트는 자기 정책에 Traefik 파드 8443 egress를, `platform-traefik`에 해당 파드의 8443 ingress를 함께 추가해요.
+
 `websecure`의 모든 라우트에는 `traefik-middlewares`의 보호 체인이 순서대로 적용돼요.
 
 1. `edge-crowdsec`: CrowdSec 판정(decision)이 있는 주소를 403으로 차단해요.
