@@ -35,7 +35,7 @@ metadata:
   namespace: issuary-system
 spec:
   instances: 1
-  imageName: ghcr.io/cloudnative-pg/postgresql:18-standard-bookworm
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.7-standard-bookworm
   postgresql:
     parameters:
       max_connections: "500"
