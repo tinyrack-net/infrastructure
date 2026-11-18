@@ -1,8 +1,7 @@
 apiVersion: policies.kyverno.io/v1
-kind: NamespacedDeletingPolicy
+kind: DeletingPolicy
 metadata:
   name: longhorn-system-backup-cleanup
-  namespace: longhorn-system
 spec:
   schedule: "17 21 * * 6"
   matchConstraints:
@@ -14,6 +13,9 @@ spec:
         resources:
           - systembackups
         scope: Namespaced
+    namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: longhorn-system
   variables:
     - name: cleanupEnabled
       expression: >-
