@@ -3,7 +3,7 @@ experimental:
   plugins:
     crowdsec:
       moduleName: github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin
-      version: v1.8.1
+      version: v1.8.2
 # LAPI key for the bouncer plugin (traefik.crowdsec-bouncer.secret.yaml).
 volumes:
   - name: crowdsec-bouncer
