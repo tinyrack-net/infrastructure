@@ -4,13 +4,7 @@ metadata:
   name: memos
   namespace: memos-system
 spec:
-  replicas: 1
-  # 서로 다른 버전이 같은 DB에 동시에 붙지 않도록 기존 파드를 먼저 내린다.
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 0
-      maxUnavailable: 1
+  replicas: 2
   selector:
     matchLabels:
       app: memos
