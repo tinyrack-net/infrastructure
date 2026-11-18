@@ -1,5 +1,7 @@
 persistence:
   defaultClass: true
+  # 단일 노드라 추가 복제본을 배치할 곳이 없다. 차트 기본값(3)은 볼륨을 degraded로 만든다.
+  defaultClassReplicaCount: 1
 longhornUI:
   replicas: 1
 defaultSettings:
